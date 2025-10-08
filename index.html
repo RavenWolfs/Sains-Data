@@ -15,21 +15,6 @@
         .priority-high { background-color: #FECACA; color: #991B1B; }
         .priority-medium { background-color: #FEF3C7; color: #92400E; }
         .priority-low { background-color: #D1FAE5; color: #065F46; }
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 10px 20px;
-            border-radius: 8px;
-            color: white;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-            z-index: 1000;
-        }
-        .toast.show { opacity: 1; }
-        .toast.success { background-color: #10B981; }
-        .toast.error { background-color: #EF4444; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -45,13 +30,13 @@
         </div>
 
         <main id="main-content" class="hidden">
-            <!-- Form untuk menambah tugas -->
+            <!-- Form dan Daftar Tugas akan muncul di sini -->
             <div class="bg-white p-6 rounded-xl shadow-md mb-8">
                 <h2 class="text-xl font-semibold mb-4">Tambah Tugas Baru</h2>
                 <form id="task-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-2">
                         <label for="task-name" class="block text-sm font-medium text-slate-700 mb-1">Nama Tugas</label>
-                        <input type="text" id="task-name" placeholder="Contoh: Mengerjakan Laporan Proyek Akhir" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" id="task-name" placeholder="Contoh: Mengerjakan Bab 1 Skripsi" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                         <label for="task-urgency" class="block text-sm font-medium text-slate-700 mb-1">Urgensi (1-5)</label>
@@ -75,7 +60,6 @@
                 </form>
             </div>
             
-            <!-- Daftar Tugas -->
             <div>
                 <h2 class="text-xl font-semibold mb-4">Daftar Tugas Anda (Diurutkan)</h2>
                 <div id="task-list" class="space-y-4">
@@ -85,50 +69,38 @@
         </main>
     </div>
 
-    <div id="toast-container" class="toast"></div>
-
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { 
-            getFirestore, 
-            collection, 
-            addDoc, 
-            onSnapshot, 
-            query, 
-            serverTimestamp,
-            doc,
-            updateDoc,
-            deleteDoc
-        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // --- KONFIGURASI DAN INISIALISASI ---
-        let db, auth, userId;
-        
-        // =================================================================================
-        // === LANGKAH 5: GANTI BAGIAN DI BAWAH INI DENGAN KONFIGURASI DARI FIREBASE ANDA ===
-        // =================================================================================
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        // === KONFIGURASI FIREBASE ANDA ===
         const firebaseConfig = {
-        apiKey: "AIzaSyC4WwUhxG5XROTr5lSHvhDS4zj2Lqmw1U0",
-        authDomain: "asisten-tugas-pribadi.firebaseapp.com",
-        projectId: "asisten-tugas-pribadi",
-        storageBucket: "asisten-tugas-pribadi.firebasestorage.app",
-        messagingSenderId: "994319187177",
-        appId: "1:994319187177:web:58ebbc1fce8645eabd4478",
+            apiKey: "AIzaSyC4WwUhxG5XROTr5lSHvhDS4zj2Lqmw1U0",
+            authDomain: "asisten-tugas-pribadi.firebaseapp.com",
+            projectId: "asisten-tugas-pribadi",
+            storageBucket: "asisten-tugas-pribadi.appspot.com",
+            messagingSenderId: "994319187177",
+            appId: "1:994319187177:web:58ebbc1fce8645eabd4478"
         };
-        // =================================================================================
+        // ===================================
 
-        // Cek jika konfigurasi masih placeholder
-        if (!firebaseConfig || firebaseConfig.apiKey === "AIzaSyC4WwUhxG5XROTr5lSHvhDS4zj2Lqmw1U0") {
-            console.error("Konfigurasi Firebase tidak ditemukan. Harap ganti placeholder di dalam kode.");
-            document.getElementById('auth-state').innerHTML = `<p class="text-sm text-red-500">Error: Konfigurasi Firebase belum diatur. Harap edit file HTML dan masukkan konfigurasi Anda.</p>`;
+        let db, auth, userId;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'asisten-tugas-pribadi';
+
+
+        // Cek jika konfigurasi valid
+        if (!firebaseConfig || !firebaseConfig.apiKey.startsWith("AIza")) {
+            document.getElementById('auth-state').innerHTML = `<p class="text-sm text-red-500 font-bold">Error: Konfigurasi Firebase tidak ditemukan atau tidak valid. Harap periksa kembali kode Anda.</p>`;
         } else {
+            // Inisialisasi Firebase
             const app = initializeApp(firebaseConfig);
             db = getFirestore(app);
             auth = getAuth(app);
 
+            // ... (Sisa kode JavaScript sama persis seperti sebelumnya) ...
+            
             // --- UI HELPER ---
             const urgencyLabels = { 1: 'Sangat Rendah', 2: 'Rendah', 3: 'Sedang', 4: 'Mendesak', 5: 'Sangat Mendesak' };
             const importanceLabels = { 1: 'Tidak Penting', 2: 'Kurang Penting', 3: 'Cukup Penting', 4: 'Penting', 5: 'Sangat Penting' };
@@ -144,22 +116,13 @@
             importanceSlider.addEventListener('input', () => {
                 importanceValue.textContent = `${importanceSlider.value} (${importanceLabels[importanceSlider.value]})`;
             });
-            
-            const showToast = (message, type = 'success') => {
-                const toast = document.getElementById('toast-container');
-                toast.textContent = message;
-                toast.className = `toast show ${type}`;
-                setTimeout(() => {
-                    toast.className = 'toast';
-                }, 3000);
-            };
 
             // --- LOGIKA PRIORITAS ---
             function calculatePriorityScore(urgency, importance, time) {
                 const score = (urgency * 3.5) + (importance * 2.5) - (time * 0.5);
                 return parseFloat(score.toFixed(2));
             }
-            
+
             // --- AUTENTIKASI ---
             onAuthStateChanged(auth, async (user) => {
                 const authStateDiv = document.getElementById('auth-state');
@@ -174,16 +137,14 @@
                          await signInAnonymously(auth);
                      } catch (error) {
                          console.error("Gagal melakukan autentikasi:", error);
-                         authStateDiv.innerHTML = `<p class="text-sm text-red-500">Gagal melakukan autentikasi.</p>`;
-                         showToast('Gagal terhubung ke server.', 'error');
+                         authStateDiv.innerHTML = `<p class="text-sm text-red-500">Gagal melakukan autentikasi. Pastikan login anonim sudah diaktifkan di Firebase Console.</p>`;
                      }
                 }
             });
 
             // --- OPERASI FIRESTORE (CRUD) ---
-            const getTasksCollectionRef = () => collection(db, `tasks-${userId}`);
+            const getTasksCollectionRef = () => collection(db, `artifacts/${appId}/users/${userId}/tasks`);
 
-            // CREATE
             document.getElementById('task-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const taskName = document.getElementById('task-name').value;
@@ -191,129 +152,74 @@
                 const importance = parseInt(document.getElementById('task-importance').value);
                 const time = parseFloat(document.getElementById('task-time').value);
 
-                if (!taskName || !userId) {
-                    showToast('Nama tugas tidak boleh kosong.', 'error');
-                    return;
-                }
-                
                 const priorityScore = calculatePriorityScore(urgency, importance, time);
 
-                try {
-                    await addDoc(getTasksCollectionRef(), {
-                        name: taskName,
-                        urgency: urgency,
-                        importance: importance,
-                        time: time,
-                        priorityScore: priorityScore,
-                        status: 'pending',
-                        createdAt: serverTimestamp()
-                    });
-                    showToast('Tugas berhasil ditambahkan!');
-                    e.target.reset(); // Reset form
-                    urgencyValue.textContent = '3 (Sedang)';
-                    importanceValue.textContent = '3 (Cukup Penting)';
-                } catch (error) {
-                    console.error("Error menambahkan dokumen:", error);
-                    showToast('Gagal menambahkan tugas.', 'error');
-                }
+                await addDoc(getTasksCollectionRef(), {
+                    name: taskName, urgency, importance, time, priorityScore,
+                    status: 'pending', createdAt: serverTimestamp()
+                });
+                
+                e.target.reset();
+                urgencyValue.textContent = '3 (Sedang)';
+                importanceValue.textContent = '3 (Cukup Penting)';
             });
             
-            // READ (Real-time)
             function listenToTasks() {
                 if (!userId) return;
                 const q = query(getTasksCollectionRef());
-                
                 onSnapshot(q, (querySnapshot) => {
-                    const tasks = [];
-                    querySnapshot.forEach((doc) => {
-                        tasks.push({ id: doc.id, ...doc.data() });
-                    });
-                    
-                    tasks.sort((a, b) => {
-                        if (a.status === 'pending' && b.status === 'completed') return -1;
-                        if (a.status === 'completed' && b.status === 'pending') return 1;
-                        return b.priorityScore - a.priorityScore;
-                    });
-                    
+                    let tasks = [];
+                    querySnapshot.forEach((doc) => tasks.push({ id: doc.id, ...doc.data() }));
+                    tasks.sort((a, b) => b.priorityScore - a.priorityScore);
                     renderTasks(tasks);
-                }, (error) => {
-                    console.error("Gagal mendengarkan perubahan data:", error);
-                    showToast('Gagal memuat data tugas.', 'error');
                 });
             }
-
-            // UPDATE
-            async function toggleTaskStatus(taskId, currentStatus) {
-                if (!userId) return;
+            
+            window.toggleTaskStatus = async (taskId, currentStatus) => {
                 const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
-                const taskDocRef = doc(db, `tasks-${userId}`, taskId);
-                try {
-                    await updateDoc(taskDocRef, { status: newStatus });
-                    showToast(`Status tugas diubah menjadi ${newStatus}.`);
-                } catch (error) {
-                    console.error("Error mengubah status tugas:", error);
-                    showToast('Gagal mengubah status tugas.', 'error');
-                }
-            }
+                const taskDocRef = doc(db, `artifacts/${appId}/users/${userId}/tasks`, taskId);
+                await updateDoc(taskDocRef, { status: newStatus });
+            };
             
-            // DELETE
-            async function deleteTask(taskId) {
-                if (!userId) return;
-                if (!confirm('Apakah Anda yakin ingin menghapus tugas ini?')) return;
-                
-                const taskDocRef = doc(db, `tasks-${userId}`, taskId);
-                try {
+            window.deleteTask = async (taskId) => {
+                if (confirm('Yakin ingin menghapus tugas ini?')) {
+                    const taskDocRef = doc(db, `artifacts/${appId}/users/${userId}/tasks`, taskId);
                     await deleteDoc(taskDocRef);
-                    showToast('Tugas berhasil dihapus.');
-                } catch (error) {
-                    console.error("Error menghapus tugas:", error);
-                    showToast('Gagal menghapus tugas.', 'error');
                 }
-            }
+            };
             
-            window.toggleTaskStatus = toggleTaskStatus;
-            window.deleteTask = deleteTask;
-
             // --- RENDER ---
             function renderTasks(tasks) {
                 const taskListDiv = document.getElementById('task-list');
                 document.getElementById('loading-tasks').style.display = 'none';
 
                 if (tasks.length === 0) {
-                    taskListDiv.innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-md">
-                        <h3 class="font-semibold text-lg">Hore, tidak ada tugas!</h3>
-                        <p class="text-slate-500 mt-1">Tambahkan tugas baru di atas untuk memulai.</p>
-                    </div>`;
+                    taskListDiv.innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-md"><h3 class="font-semibold text-lg">Tidak ada tugas!</h3><p class="text-slate-500 mt-1">Tambahkan tugas baru di atas.</p></div>`;
                     return;
                 }
 
                 taskListDiv.innerHTML = tasks.map(task => {
                     const priorityClass = task.priorityScore > 15 ? 'priority-high' : (task.priorityScore > 8 ? 'priority-medium' : 'priority-low');
-                    const priorityText = task.priorityScore > 15 ? 'Prioritas Tinggi' : (task.priorityScore > 8 ? 'Prioritas Sedang' : 'Prioritas Rendah');
+                    const priorityText = task.priorityScore > 15 ? 'Tinggi' : (task.priorityScore > 8 ? 'Sedang' : 'Rendah');
                     
                     return `
                     <div class="task-card bg-white p-4 rounded-xl shadow-md flex items-start gap-4 ${task.status === 'completed' ? 'opacity-60' : ''}">
-                        <input type="checkbox" onchange="toggleTaskStatus('${task.id}', '${task.status}')" 
-                               class="mt-1.5 h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" 
-                               ${task.status === 'completed' ? 'checked' : ''}>
+                        <input type="checkbox" onchange="toggleTaskStatus('${task.id}', '${task.status}')" class="mt-1.5 h-5 w-5 rounded" ${task.status === 'completed' ? 'checked' : ''}>
                         <div class="flex-grow">
                             <div class="flex justify-between items-start">
                                <p class="font-semibold text-lg ${task.status === 'completed' ? 'line-through' : ''}">${task.name}</p>
                                <span class="priority-badge ${priorityClass}">${priorityText} (${task.priorityScore})</span>
                             </div>
-                            <div class="text-sm text-slate-500 mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                            <div class="text-sm text-slate-500 mt-2 flex gap-4">
                                 <span>Urgensi: <strong>${task.urgency}</strong></span>
                                 <span>Pentingnya: <strong>${task.importance}</strong></span>
                                 <span>Waktu: <strong>${task.time} jam</strong></span>
                             </div>
                         </div>
-                        <button onclick="deleteTask('${task.id}')" class="text-slate-400 hover:text-red-500 transition-colors p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                              <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
-                            </svg>
+                        <button onclick="deleteTask('${task.id}')" class="text-slate-400 hover:text-red-500 p-1">
+                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
                         </button>
-                    </div>
-                    `;
+                    </div>`;
                 }).join('');
             }
         }
