@@ -25,12 +25,29 @@
             <p class="mt-2 text-slate-600">Fokus pada hal yang paling penting, sekarang juga.</p>
         </header>
 
-        <div id="auth-state" class="mb-6 text-center">
-            <p class="text-sm text-slate-500">Memuat data pengguna...</p>
+        <!-- Elemen UI untuk Login dan Logout -->
+        <div id="auth-container" class="mb-6 text-center">
+            <!-- Tombol Login akan muncul di sini jika belum login -->
+            <div id="login-view">
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button id="login-button" class="bg-white text-slate-700 font-semibold py-2 px-6 border border-slate-300 rounded-lg shadow-sm hover:bg-slate-100 transition-colors flex items-center justify-center w-full sm:w-auto">
+                        <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48" width="48px" height="48px"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.902,36.632,44,30.852,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path></svg>
+                        Login dengan Google
+                    </button>
+                    <button id="guest-login-button" class="bg-slate-600 text-white font-semibold py-2 px-6 rounded-lg shadow-sm hover:bg-slate-700 transition-colors w-full sm:w-auto">
+                        Masuk sebagai Tamu
+                    </button>
+                </div>
+            </div>
+            <!-- Info pengguna akan muncul di sini jika sudah login -->
+            <div id="user-view" class="hidden">
+                 <p class="text-sm text-slate-500 mb-2">Login sebagai <strong id="user-email"></strong></p>
+                 <button id="logout-button" class="bg-red-500 text-white font-semibold py-1 px-4 text-sm rounded-lg hover:bg-red-600 transition-colors">Logout</button>
+            </div>
         </div>
 
         <main id="main-content" class="hidden">
-            <!-- Form dan Daftar Tugas akan muncul di sini -->
+            <!-- Form dan Daftar Tugas akan muncul di sini SETELAH login -->
             <div class="bg-white p-6 rounded-xl shadow-md mb-8">
                 <h2 class="text-xl font-semibold mb-4">Tambah Tugas Baru</h2>
                 <form id="task-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -72,10 +89,10 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        // Perubahan: Impor fungsi signInAnonymously
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // === KONFIGURASI FIREBASE ANDA ===
         const firebaseConfig = {
             apiKey: "AIzaSyC4WwUhxG5XROTr5lSHvhDS4zj2Lqmw1U0",
             authDomain: "asisten-tugas-pribadi.firebaseapp.com",
@@ -84,150 +101,176 @@
             messagingSenderId: "994319187177",
             appId: "1:994319187177:web:58ebbc1fce8645eabd4478"
         };
-        // ===================================
-
-        let db, auth, userId;
+        
+        let db, auth, userId, unsubscribeTasks;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'asisten-tugas-pribadi';
 
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
 
-        // Cek jika konfigurasi valid
-        if (!firebaseConfig || !firebaseConfig.apiKey.startsWith("AIza")) {
-            document.getElementById('auth-state').innerHTML = `<p class="text-sm text-red-500 font-bold">Error: Konfigurasi Firebase tidak ditemukan atau tidak valid. Harap periksa kembali kode Anda.</p>`;
-        } else {
-            // Inisialisasi Firebase
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
+        // --- Elemen UI ---
+        const loginView = document.getElementById('login-view');
+        const userView = document.getElementById('user-view');
+        const mainContent = document.getElementById('main-content');
+        const userEmailSpan = document.getElementById('user-email');
+        const loginButton = document.getElementById('login-button');
+        const logoutButton = document.getElementById('logout-button');
+        const guestLoginButton = document.getElementById('guest-login-button'); // Tombol baru
+        const taskListDiv = document.getElementById('task-list');
 
-            // ... (Sisa kode JavaScript sama persis seperti sebelumnya) ...
-            
-            // --- UI HELPER ---
-            const urgencyLabels = { 1: 'Sangat Rendah', 2: 'Rendah', 3: 'Sedang', 4: 'Mendesak', 5: 'Sangat Mendesak' };
-            const importanceLabels = { 1: 'Tidak Penting', 2: 'Kurang Penting', 3: 'Cukup Penting', 4: 'Penting', 5: 'Sangat Penting' };
-            
-            const urgencySlider = document.getElementById('task-urgency');
-            const importanceSlider = document.getElementById('task-importance');
-            const urgencyValue = document.getElementById('urgency-value');
-            const importanceValue = document.getElementById('importance-value');
-
-            urgencySlider.addEventListener('input', () => {
-                urgencyValue.textContent = `${urgencySlider.value} (${urgencyLabels[urgencySlider.value]})`;
-            });
-            importanceSlider.addEventListener('input', () => {
-                importanceValue.textContent = `${importanceSlider.value} (${importanceLabels[importanceSlider.value]})`;
-            });
-
-            // --- LOGIKA PRIORITAS ---
-            function calculatePriorityScore(urgency, importance, time) {
-                const score = (urgency * 3.5) + (importance * 2.5) - (time * 0.5);
-                return parseFloat(score.toFixed(2));
+        // --- Fungsi untuk memulai proses login dengan Google ---
+        const signInWithGoogle = async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error("Error saat login dengan Google:", error);
+                alert("Gagal login dengan Google. Silakan coba lagi.");
             }
+        };
+        
+        // --- BARU: Fungsi untuk login sebagai tamu ---
+        const signInAsGuest = async () => {
+            try {
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.error("Error saat login sebagai tamu:", error);
+                alert("Gagal masuk sebagai tamu. Silakan coba lagi.");
+            }
+        };
 
-            // --- AUTENTIKASI ---
-            onAuthStateChanged(auth, async (user) => {
-                const authStateDiv = document.getElementById('auth-state');
-                if (user) {
-                    userId = user.uid;
-                    authStateDiv.innerHTML = `<p class="text-sm text-green-600">Terhubung sebagai: <span class="font-mono bg-slate-200 px-1 rounded">${userId}</span></p>`;
-                    document.getElementById('main-content').classList.remove('hidden');
-                    listenToTasks(); 
+        // --- Fungsi untuk logout ---
+        const doSignOut = async () => {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error("Error saat logout:", error);
+            }
+        };
+
+        // Tambahkan event listener ke tombol
+        loginButton.addEventListener('click', signInWithGoogle);
+        guestLoginButton.addEventListener('click', signInAsGuest); // Event listener baru
+        logoutButton.addEventListener('click', doSignOut);
+        
+        // --- Logika `onAuthStateChanged` yang diperbarui ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // --- KONDISI SAAT PENGGUNA LOGIN ---
+                userId = user.uid; 
+                
+                // BARU: Cek apakah pengguna anonim atau pengguna Google
+                if (user.isAnonymous) {
+                    userEmailSpan.innerHTML = `Tamu <span class="font-normal text-slate-400 text-xs">(${user.uid.substring(0, 6)}...)</span>`;
                 } else {
-                     authStateDiv.innerHTML = `<p class="text-sm text-slate-500">Tidak terautentikasi. Mencoba login...</p>`;
-                     try {
-                         await signInAnonymously(auth);
-                     } catch (error) {
-                         console.error("Gagal melakukan autentikasi:", error);
-                         authStateDiv.innerHTML = `<p class="text-sm text-red-500">Gagal melakukan autentikasi. Pastikan login anonim sudah diaktifkan di Firebase Console.</p>`;
-                     }
+                    userEmailSpan.textContent = user.email;
                 }
-            });
-
-            // --- OPERASI FIRESTORE (CRUD) ---
-            const getTasksCollectionRef = () => collection(db, `artifacts/${appId}/users/${userId}/tasks`);
-
-            document.getElementById('task-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const taskName = document.getElementById('task-name').value;
-                const urgency = parseInt(document.getElementById('task-urgency').value);
-                const importance = parseInt(document.getElementById('task-importance').value);
-                const time = parseFloat(document.getElementById('task-time').value);
-
-                const priorityScore = calculatePriorityScore(urgency, importance, time);
-
-                await addDoc(getTasksCollectionRef(), {
-                    name: taskName, urgency, importance, time, priorityScore,
-                    status: 'pending', createdAt: serverTimestamp()
-                });
                 
-                e.target.reset();
-                urgencyValue.textContent = '3 (Sedang)';
-                importanceValue.textContent = '3 (Cukup Penting)';
+                // Tampilkan UI untuk pengguna yang sudah login
+                loginView.classList.add('hidden');
+                userView.classList.remove('hidden');
+                mainContent.classList.remove('hidden');
+
+                // Mulai mendengarkan data tugas milik pengguna ini
+                listenToTasks();
+
+            } else {
+                // --- KONDISI SAAT PENGGUNA LOGOUT ---
+                userId = null;
+
+                // Tampilkan UI untuk login
+                loginView.classList.remove('hidden');
+                userView.classList.add('hidden');
+                mainContent.classList.add('hidden');
+
+                // Hentikan listener data & bersihkan daftar tugas
+                if (unsubscribeTasks) {
+                    unsubscribeTasks();
+                }
+                renderTasks([]); 
+            }
+        });
+
+        function listenToTasks() {
+            if (!userId) return;
+            if (unsubscribeTasks) {
+                unsubscribeTasks();
+            }
+            const q = query(getTasksCollectionRef());
+            unsubscribeTasks = onSnapshot(q, (querySnapshot) => {
+                let tasks = [];
+                querySnapshot.forEach((doc) => tasks.push({ id: doc.id, ...doc.data() }));
+                tasks.sort((a, b) => b.priorityScore - a.priorityScore);
+                renderTasks(tasks);
             });
-            
-            function listenToTasks() {
-                if (!userId) return;
-                const q = query(getTasksCollectionRef());
-                onSnapshot(q, (querySnapshot) => {
-                    let tasks = [];
-                    querySnapshot.forEach((doc) => tasks.push({ id: doc.id, ...doc.data() }));
-                    tasks.sort((a, b) => b.priorityScore - a.priorityScore);
-                    renderTasks(tasks);
-                });
-            }
-            
-            window.toggleTaskStatus = async (taskId, currentStatus) => {
-                const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
-                const taskDocRef = doc(db, `artifacts/${appId}/users/${userId}/tasks`, taskId);
-                await updateDoc(taskDocRef, { status: newStatus });
-            };
-            
-            window.deleteTask = async (taskId) => {
-                if (confirm('Yakin ingin menghapus tugas ini?')) {
-                    const taskDocRef = doc(db, `artifacts/${appId}/users/${userId}/tasks`, taskId);
-                    await deleteDoc(taskDocRef);
-                }
-            };
-            
-            // --- RENDER ---
-            function renderTasks(tasks) {
-                const taskListDiv = document.getElementById('task-list');
-                const loadingElement = document.getElementById('loading-tasks');
-                
-                // Cek jika elemen 'loading-tasks' masih ada sebelum mengubah stylenya
-                if (loadingElement) {
-                    loadingElement.style.display = 'none';
-                }
-
-                if (tasks.length === 0) {
-                    taskListDiv.innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-md"><h3 class="font-semibold text-lg">Tidak ada tugas!</h3><p class="text-slate-500 mt-1">Tambahkan tugas baru di atas.</p></div>`;
-                    return;
-                }
-
-                taskListDiv.innerHTML = tasks.map(task => {
-                    const priorityClass = task.priorityScore > 15 ? 'priority-high' : (task.priorityScore > 8 ? 'priority-medium' : 'priority-low');
-                    const priorityText = task.priorityScore > 15 ? 'Tinggi' : (task.priorityScore > 8 ? 'Sedang' : 'Rendah');
-                    
-                    return `
-                    <div class="task-card bg-white p-4 rounded-xl shadow-md flex items-start gap-4 ${task.status === 'completed' ? 'opacity-60' : ''}">
-                        <input type="checkbox" onchange="toggleTaskStatus('${task.id}', '${task.status}')" class="mt-1.5 h-5 w-5 rounded" ${task.status === 'completed' ? 'checked' : ''}>
-                        <div class="flex-grow">
-                            <div class="flex justify-between items-start">
-                               <p class="font-semibold text-lg ${task.status === 'completed' ? 'line-through' : ''}">${task.name}</p>
-                               <span class="priority-badge ${priorityClass}">${priorityText} (${task.priorityScore})</span>
-                            </div>
-                            <div class="text-sm text-slate-500 mt-2 flex gap-4">
-                                <span>Urgensi: <strong>${task.urgency}</strong></span>
-                                <span>Pentingnya: <strong>${task.importance}</strong></span>
-                                <span>Waktu: <strong>${task.time} jam</strong></span>
-                            </div>
-                        </div>
-                        <button onclick="deleteTask('${task.id}')" class="text-slate-400 hover:text-red-500 p-1">
-                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
-                        </button>
-                    </div>`;
-                }).join('');
-            }
         }
+        
+        function renderTasks(tasks) {
+            if (tasks.length === 0) {
+                taskListDiv.innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-md"><h3 class="font-semibold text-lg">Tidak ada tugas!</h3><p class="text-slate-500 mt-1">Tambahkan tugas baru di atas untuk memulai.</p></div>`;
+                return;
+            }
+            taskListDiv.innerHTML = tasks.map(task => {
+                const priorityClass = task.priorityScore > 15 ? 'priority-high' : (task.priorityScore > 8 ? 'priority-medium' : 'low');
+                const priorityText = task.priorityScore > 15 ? 'Tinggi' : (task.priorityScore > 8 ? 'Sedang' : 'Rendah');
+                
+                return `
+                <div class="task-card bg-white p-4 rounded-xl shadow-md flex items-start gap-4 ${task.status === 'completed' ? 'opacity-60' : ''}">
+                    <input type="checkbox" onchange="toggleTaskStatus('${task.id}', '${task.status}')" class="mt-1.5 h-5 w-5 rounded" ${task.status === 'completed' ? 'checked' : ''}>
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start">
+                           <p class="font-semibold text-lg ${task.status === 'completed' ? 'line-through' : ''}">${task.name}</p>
+                           <span class="priority-badge ${priorityClass}">${priorityText} (${task.priorityScore})</span>
+                        </div>
+                        <div class="text-sm text-slate-500 mt-2 flex gap-4">
+                            <span>Urgensi: <strong>${task.urgency}</strong></span>
+                            <span>Pentingnya: <strong>${task.importance}</strong></span>
+                            <span>Waktu: <strong>${task.time} jam</strong></span>
+                        </div>
+                    </div>
+                    <button onclick="deleteTask('${task.id}')" class="text-slate-400 hover:text-red-500 p-1">
+                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+                    </button>
+                </div>`;
+            }).join('');
+        }
+
+        // --- Fungsi lainnya (helper & CRUD) tetap sama ---
+        const urgencyLabels = { 1: 'Sangat Rendah', 2: 'Rendah', 3: 'Sedang', 4: 'Mendesak', 5: 'Sangat Mendesak' };
+        const importanceLabels = { 1: 'Tidak Penting', 2: 'Kurang Penting', 3: 'Cukup Penting', 4: 'Penting', 5: 'Sangat Penting' };
+        const urgencySlider = document.getElementById('task-urgency');
+        const importanceSlider = document.getElementById('task-importance');
+        const urgencyValue = document.getElementById('urgency-value');
+        const importanceValue = document.getElementById('importance-value');
+        urgencySlider.addEventListener('input', () => { urgencyValue.textContent = `${urgencySlider.value} (${urgencyLabels[urgencySlider.value]})`; });
+        importanceSlider.addEventListener('input', () => { importanceValue.textContent = `${importanceSlider.value} (${importanceLabels[importanceSlider.value]})`; });
+        function calculatePriorityScore(urgency, importance, time) { return parseFloat(((urgency * 3.5) + (importance * 2.5) - (time * 0.5)).toFixed(2)); }
+        const getTasksCollectionRef = () => collection(db, `artifacts/${appId}/users/${userId}/tasks`);
+        document.getElementById('task-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const taskName = document.getElementById('task-name').value;
+            const urgency = parseInt(document.getElementById('task-urgency').value);
+            const importance = parseInt(document.getElementById('task-importance').value);
+            const time = parseFloat(document.getElementById('task-time').value);
+            const priorityScore = calculatePriorityScore(urgency, importance, time);
+            await addDoc(getTasksCollectionRef(), { name: taskName, urgency, importance, time, priorityScore, status: 'pending', createdAt: serverTimestamp() });
+            e.target.reset();
+            urgencyValue.textContent = '3 (Sedang)';
+            importanceValue.textContent = '3 (Cukup Penting)';
+        });
+        window.toggleTaskStatus = async (taskId, currentStatus) => {
+            const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
+            const taskDocRef = doc(db, `artifacts/${appId}/users/${userId}/tasks`, taskId);
+            await updateDoc(taskDocRef, { status: newStatus });
+        };
+        window.deleteTask = async (taskId) => {
+            if (confirm('Yakin ingin menghapus tugas ini?')) {
+                const taskDocRef = doc(db, `artifacts/${appId}/users/${userId}/tasks`, taskId);
+                await deleteDoc(taskDocRef);
+            }
+        };
+
     </script>
 </body>
 </html>
