@@ -191,7 +191,12 @@
             // --- RENDER ---
             function renderTasks(tasks) {
                 const taskListDiv = document.getElementById('task-list');
-                document.getElementById('loading-tasks').style.display = 'none';
+                const loadingElement = document.getElementById('loading-tasks');
+                
+                // Cek jika elemen 'loading-tasks' masih ada sebelum mengubah stylenya
+                if (loadingElement) {
+                    loadingElement.style.display = 'none';
+                }
 
                 if (tasks.length === 0) {
                     taskListDiv.innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-md"><h3 class="font-semibold text-lg">Tidak ada tugas!</h3><p class="text-slate-500 mt-1">Tambahkan tugas baru di atas.</p></div>`;
