@@ -90,7 +90,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { 
             getFirestore, 
             collection, 
@@ -104,16 +104,26 @@
         } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // --- KONFIGURASI DAN INISIALISASI ---
-        let db, auth, userId, appId;
+        let db, auth, userId;
         
-        // Cek variabel global dari environment
-        appId = typeof __app_id !== 'undefined' ? __app_id : 'default-task-app';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // =================================================================================
+        // === LANGKAH 5: GANTI BAGIAN DI BAWAH INI DENGAN KONFIGURASI DARI FIREBASE ANDA ===
+        // =================================================================================
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+        apiKey: "AIzaSyC4WwUhxG5XROTr5lSHvhDS4zj2Lqmw1U0",
+        authDomain: "asisten-tugas-pribadi.firebaseapp.com",
+        projectId: "asisten-tugas-pribadi",
+        storageBucket: "asisten-tugas-pribadi.firebasestorage.app",
+        messagingSenderId: "994319187177",
+        appId: "1:994319187177:web:58ebbc1fce8645eabd4478",
+        };
+        // =================================================================================
 
-        if (!firebaseConfig) {
-            console.error("Konfigurasi Firebase tidak ditemukan.");
-            document.getElementById('auth-state').innerHTML = `<p class="text-sm text-red-500">Error: Konfigurasi Firebase tidak ditemukan.</p>`;
+        // Cek jika konfigurasi masih placeholder
+        if (!firebaseConfig || firebaseConfig.apiKey === "AIzaSyC4WwUhxG5XROTr5lSHvhDS4zj2Lqmw1U0") {
+            console.error("Konfigurasi Firebase tidak ditemukan. Harap ganti placeholder di dalam kode.");
+            document.getElementById('auth-state').innerHTML = `<p class="text-sm text-red-500">Error: Konfigurasi Firebase belum diatur. Harap edit file HTML dan masukkan konfigurasi Anda.</p>`;
         } else {
             const app = initializeApp(firebaseConfig);
             db = getFirestore(app);
@@ -146,8 +156,6 @@
 
             // --- LOGIKA PRIORITAS ---
             function calculatePriorityScore(urgency, importance, time) {
-                // Formula sederhana yang terinspirasi dari model ML.
-                // Bobot lebih tinggi pada Urgensi, lalu Pentingnya. Waktu menjadi faktor pengurang.
                 const score = (urgency * 3.5) + (importance * 2.5) - (time * 0.5);
                 return parseFloat(score.toFixed(2));
             }
@@ -159,15 +167,11 @@
                     userId = user.uid;
                     authStateDiv.innerHTML = `<p class="text-sm text-green-600">Terhubung sebagai: <span class="font-mono bg-slate-200 px-1 rounded">${userId}</span></p>`;
                     document.getElementById('main-content').classList.remove('hidden');
-                    listenToTasks(); // Mulai mendengarkan data setelah user terautentikasi
+                    listenToTasks(); 
                 } else {
                      authStateDiv.innerHTML = `<p class="text-sm text-slate-500">Tidak terautentikasi. Mencoba login...</p>`;
                      try {
-                         if (initialAuthToken) {
-                             await signInWithCustomToken(auth, initialAuthToken);
-                         } else {
-                             await signInAnonymously(auth);
-                         }
+                         await signInAnonymously(auth);
                      } catch (error) {
                          console.error("Gagal melakukan autentikasi:", error);
                          authStateDiv.innerHTML = `<p class="text-sm text-red-500">Gagal melakukan autentikasi.</p>`;
@@ -177,7 +181,8 @@
             });
 
             // --- OPERASI FIRESTORE (CRUD) ---
-            
+            const getTasksCollectionRef = () => collection(db, `tasks-${userId}`);
+
             // CREATE
             document.getElementById('task-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -194,8 +199,7 @@
                 const priorityScore = calculatePriorityScore(urgency, importance, time);
 
                 try {
-                    const tasksCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/tasks`);
-                    await addDoc(tasksCollectionRef, {
+                    await addDoc(getTasksCollectionRef(), {
                         name: taskName,
                         urgency: urgency,
                         importance: importance,
@@ -217,8 +221,7 @@
             // READ (Real-time)
             function listenToTasks() {
                 if (!userId) return;
-                const tasksCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/tasks`);
-                const q = query(tasksCollectionRef);
+                const q = query(getTasksCollectionRef());
                 
                 onSnapshot(q, (querySnapshot) => {
                     const tasks = [];
@@ -226,8 +229,6 @@
                         tasks.push({ id: doc.id, ...doc.data() });
                     });
                     
-                    // Urutkan tugas berdasarkan priorityScore (tertinggi ke terendah)
-                    // dan status (pending dulu baru completed)
                     tasks.sort((a, b) => {
                         if (a.status === 'pending' && b.status === 'completed') return -1;
                         if (a.status === 'completed' && b.status === 'pending') return 1;
@@ -245,7 +246,7 @@
             async function toggleTaskStatus(taskId, currentStatus) {
                 if (!userId) return;
                 const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
-                const taskDocRef = doc(db, `artifacts/${appId}/users/${userId}/tasks`, taskId);
+                const taskDocRef = doc(db, `tasks-${userId}`, taskId);
                 try {
                     await updateDoc(taskDocRef, { status: newStatus });
                     showToast(`Status tugas diubah menjadi ${newStatus}.`);
@@ -260,7 +261,7 @@
                 if (!userId) return;
                 if (!confirm('Apakah Anda yakin ingin menghapus tugas ini?')) return;
                 
-                const taskDocRef = doc(db, `artifacts/${appId}/users/${userId}/tasks`, taskId);
+                const taskDocRef = doc(db, `tasks-${userId}`, taskId);
                 try {
                     await deleteDoc(taskDocRef);
                     showToast('Tugas berhasil dihapus.');
