@@ -179,7 +179,6 @@
         function safeAddEventListener(elementId, event, handler) {
              try {
                 const element = document.getElementById(elementId);
-                // *** PERBAIKAN: Log lebih detail ***
                 console.log(`[DEBUG] safeAddEventListener: Mencari #${elementId}. Ditemukan: ${element ? 'Ya' : 'Tidak'}`); 
                 if (element) {
                     element.addEventListener(event, handler);
@@ -298,13 +297,44 @@
             const addNewTask = async (taskData) => { /* ... */ };
 
             // --- Event Listener Form Manual ---
-             safeAddEventListener('task-form', 'submit', async (e) => { /* ... */ });
+             // *** PERBAIKAN: Tambahkan log di dalam listener form ***
+             safeAddEventListener('task-form', 'submit', async (e) => { 
+                 e.preventDefault(); // <-- INI YANG PENTING
+                 console.log("[DEBUG] Form submit event triggered. preventDefault() dipanggil."); // <-- Log Baru
+
+                 console.log("[DEBUG] Tombol 'Tambah' (form) diklik."); // <-- Log Lama (sebagai perbandingan)
+
+                 if (!userId) {
+                     console.error("[DEBUG] GAGAL: Tidak bisa menambah tugas, userId adalah null saat submit.");
+                     alert("Error: Anda tidak terautentikasi. Silakan logout dan login kembali.");
+                     return; 
+                 }
+                const taskData = {
+                    name: document.getElementById('task-name')?.value,
+                    urgency: parseInt(document.getElementById('task-urgency')?.value || '3'), 
+                    pentingnya: parseInt(document.getElementById('task-importance')?.value || '3'), 
+                    time: parseFloat(document.getElementById('task-time')?.value || '1') 
+                };
+                if (!taskData.name) { 
+                    alert("Nama tugas tidak boleh kosong.");
+                    return;
+                }
+                const success = await addNewTask(taskData);
+                if (success) { 
+                    const form = e.target; // Dapatkan referensi form dari event
+                    if (form) form.reset(); // Reset form jika elemen ditemukan
+                    const urgencyValueSpan = document.getElementById('urgency-value');
+                    const importanceValueSpan = document.getElementById('importance-value');
+                    if(urgencyValueSpan) urgencyValueSpan.textContent = '3 (Lusa)';
+                    if(importanceValueSpan) importanceValueSpan.textContent = '3 (Tugas Besar)';
+                 }
+              });
+
 
             // --- Fungsi & Listener Login/Logout/Ekspor ---
-            const signInWithGoogle = () => { console.log("[DEBUG] Fungsi signInWithGoogle dipanggil."); if(auth) { signInWithPopup(auth, new GoogleAuthProvider()).catch(err => console.error("Google Sign-In Error:", err)); } else { console.error("Auth not ready for Google Sign-In"); alert("Layanan login belum siap.");}};
-            const signInAsGuest = () => { console.log("[DEBUG] Fungsi signInAsGuest dipanggil."); if(auth) { signInAnonymously(auth).catch(err => console.error("Guest Sign-In Error:", err)); } else { console.error("Auth not ready for Guest Sign-In"); alert("Layanan login belum siap.");}};
-            const doSignOut = () => { console.log("[DEBUG] Fungsi doSignOut dipanggil."); if(auth) { signOut(auth).catch(err => console.error("Sign Out Error:", err)); } else { console.error("Auth not ready for Sign Out"); alert("Layanan logout belum siap.");}};
-            // *** PERBAIKAN: Memasang listener login di sini ***
+            const signInWithGoogle = () => { /* ... */ };
+            const signInAsGuest = () => { /* ... */ };
+            const doSignOut = () => { /* ... */ };
             safeAddEventListener('login-button', 'click', signInWithGoogle);
             safeAddEventListener('guest-login-button', 'click', signInAsGuest);
             safeAddEventListener('logout-button', 'click', doSignOut);
@@ -322,15 +352,8 @@
             window.deleteTask = async (taskId) => { /* ... */ };
             
             // --- LOGIKA CHATBOT AI ---
-            // *** PERBAIKAN: Memasang listener chatbot di sini ***
-            safeAddEventListener('chatbot-fab', 'click', () => { 
-                const modal = document.getElementById('chatbot-modal');
-                if(modal) modal.classList.remove('hidden');
-             });
-            safeAddEventListener('chat-close', 'click', () => { 
-                const modal = document.getElementById('chatbot-modal');
-                if(modal) modal.classList.add('hidden');
-            });
+            safeAddEventListener('chatbot-fab', 'click', () => { /* ... */ });
+            safeAddEventListener('chat-close', 'click', () => { /* ... */ });
             function appendChatMessage(message, sender = 'bot') { /* ... */ }
             async function callGeminiApi(text) { /* ... */ }
             safeAddEventListener('chat-form', 'submit', async (e) => { /* ... */ });
@@ -340,20 +363,16 @@
 
             // --- LOGIKA AHP DIHAPUS ---
 
-            // Pemanggilan loadWeights dihapus
-
         } // Penutup mainAppLogic
 
         // --- Panggil fungsi utama SETELAH DOM siap ---
         if (document.readyState === 'loading') { 
             document.addEventListener('DOMContentLoaded', mainAppLogic);
         } else { 
-            // Cek apakah Firebase siap sebelum memanggil
-            if (auth && db) { // Periksa db juga
+            if (auth && db) { 
                  mainAppLogic();
             } else {
                  console.warn("[WARN] DOM siap, tapi Firebase (auth/db) belum. Menunggu...");
-                 // Coba panggil lagi setelah delay singkat, sebagai fallback jika init lambat
                  setTimeout(() => {
                      if (auth && db) {
                          console.log("[DEBUG] Firebase siap setelah delay, memanggil mainAppLogic.");
@@ -363,7 +382,7 @@
                           const loginStatus = document.getElementById('login-status');
                           if(loginStatus) loginStatus.textContent = "Gagal memuat layanan Firebase.";
                      }
-                 }, 1000); // Tunggu 1 detik
+                 }, 1000); 
             }
         }
 
