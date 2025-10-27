@@ -235,11 +235,12 @@
                 console.error("[DEBUG] GAGAL: getTasksCollectionRef dipanggil tetapi userId adalah null!");
                 return null;
             }
-            // INI ADALAH PATH BARU YANG BENAR (sesuai screenshot Anda)
-            const path = `users/${userId}/tasks`; 
+            // INI ADALAH PATH YANG BENAR (artifacts/appId/users/userId/tasks)
+            const path = `artifacts/${appId}/users/${userId}/tasks`; 
             console.log(`[DEBUG] Menggunakan path collection: ${path}`);
             return collection(db, path);
         }
+        
         // ... (Fungsi listenToTasks, renderTasks, CRUD, dll. tidak perlu diubah) ...
         function listenToTasks() {
             if (!userId) return;
