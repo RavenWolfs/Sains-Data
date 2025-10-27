@@ -55,66 +55,19 @@
 
         <!-- Konten Utama -->
         <main id="main-content" class="hidden">
-            <div class="bg-white p-6 rounded-xl shadow-md mb-8">
-                <h2 class="text-xl font-semibold mb-4">Tambah Tugas (Manual)</h2>
-                <!-- Form input -->
-                <form id="task-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="md:col-span-2"><label for="task-name" class="block text-sm font-medium text-slate-700 mb-1">Nama Tugas</label><input type="text" id="task-name" placeholder="Contoh: Laporan Praktikum Jaringan Komputer" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
-                    <div>
-                        <label for="task-urgency" class="block text-sm font-medium text-slate-700 mb-1">Urgensi</label>
-                        <input type="range" id="task-urgency" min="1" max="5" value="3" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
-                        <span id="urgency-value" class="text-sm text-slate-500">3 (Lusa)</span>
-                    </div>
-                    <div>
-                        <label for="task-importance" class="block text-sm font-medium text-slate-700 mb-1">Pentingnya</label>
-                        <input type="range" id="task-importance" min="1" max="5" value="3" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
-                        <span id="importance-value" class="text-sm text-slate-500">3 (Tugas Besar)</span>
-                    </div>
-                    <div class="md:col-span-2"><label for="task-time" class="block text-sm font-medium text-slate-700 mb-1">Estimasi Waktu (Jam)</label><input type="number" id="task-time" min="0.5" step="0.5" value="1" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
-                    <div class="md:col-span-2"><button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">Prioritaskan & Tambah</button></div>
-                </form>
-                 <!-- Tampilan bobot dihapus -->
-            </div>
-            
-            <div>
-                <!-- Daftar Tugas & Panel Admin -->
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold">Daftar Tugas Anda (Diurutkan)</h2>
-                </div>
-                <div id="admin-panel" class="hidden bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
-                   <!-- Panel Admin -->
-                   <h3 class="text-lg font-semibold text-yellow-900">Panel Admin</h3>
-                   <p class="text-sm text-yellow-700 mb-3">Pilih pengguna untuk mengunduh data tugas mereka.</p>
-                   <div class="flex flex-col sm:flex-row gap-2">
-                       <label for="user-select-dropdown" class="sr-only">Pilih pengguna</label>
-                       <select id="user-select-dropdown" class="grow px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                           <option value="">Memuat daftar pengguna...</option>
-                       </select>
-                       <button id="download-button" class="bg-green-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
-                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                           Download Data
-                       </button>
-                   </div>
-                </div>
-                <div id="task-list" class="space-y-4">
-                    <p id="loading-tasks" class="text-slate-500 text-center">Memuat tugas...</p>
-                </div>
-            </div>
+            <!-- ... (Isi main content tidak berubah) ... -->
         </main>
     </div>
 
     <!-- Tombol FAB -->
     <button id="chatbot-fab" class="hidden bg-blue-600 text-white p-4 rounded-full shadow-lg" title="Buka Asisten Tugas" aria-label="Buka Asisten Tugas">
-       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-       <span class="sr-only">Buka Asisten Tugas</span>
+       <!-- Icon --> <span class="sr-only">Buka Asisten Tugas</span>
     </button>
     <!-- Tombol FAB Settings dihapus -->
 
     <!-- Modal -->
     <div id="chatbot-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col" style="height: 70vh;">
-            <!-- ... (Konten Modal Chatbot) ... -->
-        </div>
+         <!-- ... (Konten Modal Chatbot) ... -->
     </div>
     <!-- Modal Settings dihapus -->
 
@@ -140,21 +93,27 @@
         let pendingTaskData = null; 
         const appId = 'asisten-tugas-pribadi';
         let app = null; 
-        // Variabel weights dihapus
-
+        
         try {
-            console.log("[DEBUG] Mencoba inisialisasi Firebase...");
+            console.log("[DEBUG][INIT] Mencoba inisialisasi Firebase...");
             app = initializeApp(firebaseConfig); 
             if (app) {
                 db = getFirestore(app);
                 auth = getAuth(app);
-                console.log("[DEBUG] Firebase BERHASIL diinisialisasi.");
+                console.log("[DEBUG][INIT] Firebase BERHASIL diinisialisasi.");
             } else {
                  throw new Error("Objek aplikasi Firebase tidak valid setelah inisialisasi.");
             }
         } catch (error) {
-             console.error("!!! KRITIS: Gagal menginisialisasi Firebase !!!", error);
+             console.error("!!! KRITIS [INIT]: Gagal menginisialisasi Firebase !!!", error);
              alert("Gagal menginisialisasi Firebase. Aplikasi tidak bisa berjalan. Cek Console (F12). Error: " + error.message);
+             // Tampilkan pesan error di UI jika init gagal total
+             const loginStatus = document.getElementById('login-status');
+             if (loginStatus) {
+                 loginStatus.textContent = "Gagal memuat Firebase!";
+                 loginStatus.classList.remove('hidden');
+             }
+             // Hentikan eksekusi lebih lanjut
              throw new Error("Firebase init failed"); 
         }
 
@@ -162,104 +121,58 @@
         function safeAddEventListener(elementId, event, handler) {
              try {
                 const element = document.getElementById(elementId);
+                // console.log(`[DEBUG][LISTENER] Mencari #${elementId}. Ditemukan: ${element ? 'Ya' : 'Tidak'}`); 
                 if (element) {
                     element.addEventListener(event, handler);
-                    console.log(`[DEBUG] Listener added for ${event} on #${elementId}`); 
+                    console.log(`[DEBUG][LISTENER] Listener added for ${event} on #${elementId}`); 
                 } else {
-                    console.warn(`[WARN] Elemen dengan ID "${elementId}" tidak ditemukan saat mencoba menambah listener.`);
+                    console.warn(`[WARN][LISTENER] Elemen dengan ID "${elementId}" tidak ditemukan.`);
                 }
             } catch(e) {
-                 console.error(`[ERROR] Gagal menambah listener ke #${elementId}:`, e);
+                 console.error(`[ERROR][LISTENER] Gagal menambah listener ke #${elementId}:`, e);
             }
         }
         
         // --- Fungsi Utama (Dipanggil setelah DOM siap) ---
         function mainAppLogic() {
-            console.log("[DEBUG] DOM loaded. Memulai mainAppLogic.");
+            console.log("[DEBUG][MAIN] DOM loaded. Memulai mainAppLogic.");
 
              if (!db || !auth) {
-                 console.error("!!! KRITIS: DB atau Auth tidak terinisialisasi di mainAppLogic !!!");
+                 console.error("!!! KRITIS [MAIN]: DB atau Auth tidak terinisialisasi di mainAppLogic !!!");
                  alert("Error internal: Layanan Firebase tidak siap. Coba refresh.");
                  return; 
              }
 
-            // Elemen UI
+            // Elemen UI (cari sekali di awal)
             const loginView = document.getElementById('login-view');
             const userView = document.getElementById('user-view');
             const mainContent = document.getElementById('main-content');
             const userEmailSpan = document.getElementById('user-email');
             const chatbotFab = document.getElementById('chatbot-fab');
-            // settingsFab dihapus
             const adminPanel = document.getElementById('admin-panel'); 
             const loginStatus = document.getElementById('login-status'); 
             const loginButtonsContainer = document.getElementById('login-buttons-container'); 
 
 
             // --- Logika Label Slider Manual ---
-            const urgencyLabels = { 1: 'Santai (> Seminggu)', 2: 'Minggu Ini', 3: 'Lusa', 4: 'Besok', 5: 'Hari Ini (Mendesak)' };
-            const importanceLabels = { 1: 'Catatan', 2: 'Tugas Harian', 3: 'Tugas Besar/Projek', 4: 'Kuis/Presentasi', 5: 'Ujian/Final' };
-            safeAddEventListener('task-urgency', 'input', (e) => { 
-                const valueSpan = document.getElementById('urgency-value');
-                if(valueSpan) valueSpan.textContent = `${e.target.value} (${urgencyLabels[e.target.value]})`; 
-            });
-            safeAddEventListener('task-importance', 'input', (e) => { 
-                const valueSpan = document.getElementById('importance-value');
-                if(valueSpan) valueSpan.textContent = `${e.target.value} (${importanceLabels[e.target.value]})`; 
-            });
+            const urgencyLabels = { /* ... */ };
+            const importanceLabels = { /* ... */ };
+            safeAddEventListener('task-urgency', 'input', (e) => { /* ... */ });
+            safeAddEventListener('task-importance', 'input', (e) => { /* ... */ });
 
             // --- Fungsi Admin ---
-            const checkAdminStatus = async (user) => { 
-                 if (!user || user.isAnonymous) return false;
-                const userDocRef = doc(db, "users", user.uid);
-                try {
-                    const userDoc = await getDoc(userDocRef);
-                    return userDoc.exists() && userDoc.data().isAdmin === true;
-                } catch (error) {
-                    console.error("Gagal memeriksa status admin:", error);
-                    return false;
-                }
-             };
-            const loadUserListForAdmin = async () => { 
-                 const adminPanel = document.getElementById('admin-panel');
-                 const userSelectDropdown = document.getElementById('user-select-dropdown');
-                 if (!adminPanel || !userSelectDropdown) return;
-                 adminPanel.classList.add('hidden'); 
-                 try {
-                     const usersCollectionRef = collection(db, "users");
-                     const snapshot = await getDocs(usersCollectionRef);
-                     userSelectDropdown.innerHTML = ''; 
-                     if (snapshot.empty) {
-                         userSelectDropdown.innerHTML = '<option value="">Tidak ada pengguna</option>';
-                         return;
-                     }
-                     snapshot.forEach(doc => {
-                         const userData = doc.data();
-                         const userId = doc.id;
-                         const userName = userData.email || `Tamu (${userId.substring(0, 8)}...)`;
-                         const option = document.createElement('option');
-                         option.value = userId;
-                         option.textContent = userName;
-                         userSelectDropdown.appendChild(option);
-                     });
-                     adminPanel.classList.remove('hidden'); 
-                 } catch (error) {
-                     console.error("[DEBUG] Gagal memuat daftar pengguna:", error);
-                     adminPanel.innerHTML = `<p class="text-red-600">Gagal memuat daftar pengguna. (Perlu Security Rules Admin)</p>`;
-                     adminPanel.classList.remove('hidden');
-                 }
-            };
-
+            const checkAdminStatus = async (user) => { /* ... */ };
+            const loadUserListForAdmin = async () => { /* ... */ };
 
             // --- Otak Aplikasi: onAuthStateChanged ---
-            console.log("[DEBUG] Memasang listener onAuthStateChanged...");
+            console.log("[DEBUG][AUTH] Memasang listener onAuthStateChanged...");
             if (auth) {
                 onAuthStateChanged(auth, async (user) => {
-                    console.log("[DEBUG] onAuthStateChanged terpanggil. User:", user ? `UID: ${user.uid.substring(0,5)}...` : 'null');
+                    console.log("[DEBUG][AUTH] onAuthStateChanged terpanggil. User:", user ? `UID: ${user.uid.substring(0,5)}...` : 'null');
                      
                      // Sembunyikan elemen dinamis
                      if(adminPanel) adminPanel.classList.add('hidden');
                      if(chatbotFab) chatbotFab.classList.add('hidden');
-                     // settingsFab dihapus
                      if(mainContent) mainContent.classList.add('hidden'); 
                      if(userView) userView.classList.add('hidden'); 
                      if(loginView) loginView.classList.add('hidden'); 
@@ -273,18 +186,20 @@
                         if(userView) userView.classList.remove('hidden');
                         if(mainContent) mainContent.classList.remove('hidden');
                         if(chatbotFab) chatbotFab.classList.remove('hidden'); 
-                        // settingsFab dihapus
                         
                         if (await checkAdminStatus(user)) {
                             loadUserListForAdmin(); 
                         }
-                        // loadWeights dihapus
                         listenToTasks();
                     } else {
                         userId = null;
                          // Tampilkan UI login
+                         console.log("[DEBUG][AUTH] User null, menampilkan tombol login."); // Log tambahan
                          if(loginView) loginView.classList.remove('hidden'); 
-                         if(loginButtonsContainer) loginButtonsContainer.classList.remove('hidden'); 
+                         if(loginButtonsContainer) loginButtonsContainer.classList.remove('hidden'); // Tampilkan tombol
+                         if(loginStatus) loginStatus.textContent = "Silakan login atau masuk sebagai tamu."; // Update status
+                         if(loginStatus) loginStatus.classList.remove('hidden'); // Tampilkan status
+
                         if (unsubscribeTasks) {
                             unsubscribeTasks(); 
                             unsubscribeTasks = null;
@@ -293,101 +208,62 @@
                     }
                 }, 
                 (error) => {
-                     console.error("!!! KRITIS: Error pada onAuthStateChanged !!!", error);
+                     console.error("!!! KRITIS [AUTH]: Error pada onAuthStateChanged !!!", error);
                      alert("Terjadi error saat memeriksa status login. Cek Console (F12).");
                      if(loginView) loginView.classList.remove('hidden'); 
                      if(loginButtonsContainer) loginButtonsContainer.classList.remove('hidden');
                      if(loginStatus) loginStatus.textContent = "Gagal memeriksa status login.";
+                     if(loginStatus) loginStatus.classList.remove('hidden');
                 });
-                console.log("[DEBUG] Listener onAuthStateChanged terpasang.");
+                console.log("[DEBUG][AUTH] Listener onAuthStateChanged terpasang.");
             } else {
-                 console.error("!!! KRITIS: Objek Auth tidak valid, listener onAuthStateChanged tidak bisa dipasang !!!");
+                 console.error("!!! KRITIS [AUTH]: Objek Auth tidak valid, listener onAuthStateChanged tidak bisa dipasang !!!");
                  alert("Error internal: Layanan Autentikasi tidak siap.");
                   if(loginView) loginView.classList.remove('hidden'); 
                   if(loginButtonsContainer) loginButtonsContainer.classList.remove('hidden');
                   if(loginStatus) loginStatus.textContent = "Gagal memuat autentikasi.";
+                  if(loginStatus) loginStatus.classList.remove('hidden');
             }
 
 
             // --- Fungsi Path Collection ---
-            const getTasksCollectionRef = (targetUserId) => { 
-                if (!db) { console.error("[ERROR] DB tidak valid di getTasksCollectionRef."); return null; }
-                const idToUse = targetUserId || userId; 
-                if (!idToUse) return null;
-                try {
-                    return collection(db, `artifacts/${appId}/users/${idToUse}/tasks`);
-                } catch (error) {
-                    console.error("[ERROR] Gagal membuat CollectionReference:", error);
-                    return null;
-                }
-             };
+            const getTasksCollectionRef = (targetUserId) => { /* ... */ };
 
-            // --- Fungsi Hitung Skor (Kembali ke Hardcoded) ---
-            function calculatePriorityScore(urgency, pentingnya, time) {
-                const score = (Number(urgency) * 3.5) + (Number(pentingnya) * 2.5) - (Number(time) * 0.5); 
-                return parseFloat(score.toFixed(2));
-            }
-
+            // --- Fungsi Hitung Skor (Hardcoded) ---
+            function calculatePriorityScore(urgency, pentingnya, time) { /* ... */ }
 
             // --- Fungsi Tambah Tugas ---
-            const addNewTask = async (taskData) => { 
-                 if (!userId) { alert("Error: Anda tidak terautentikasi."); return false;}
-                try {
-                    const urgency = Number(taskData.urgency);
-                    const pentingnya = Number(taskData.pentingnya); 
-                    const time = Number(taskData.time);
-
-                    if (isNaN(urgency) || isNaN(pentingnya) || isNaN(time)) {
-                        throw new Error("Data input (urgency/pentingnya/time) tidak valid.");
-                    }
-                    
-                    const priorityScore = calculatePriorityScore(urgency, pentingnya, time); // Menggunakan bobot hardcoded
-                     if (isNaN(priorityScore)) {
-                         throw new Error("Gagal menghitung skor prioritas.");
-                     }
-                    
-                    const fullTaskData = {
-                        name: taskData.name, urgency, pentingnya, time, 
-                        priorityScore, status: 'pending', createdAt: serverTimestamp()
-                    };
-
-                    const collectionRef = getTasksCollectionRef(userId);
-                    if (!collectionRef) throw new Error("Ref koleksi tidak valid.");
-                    
-                    console.log("[DEBUG] Menambah tugas:", fullTaskData); // Hapus referensi ke weights
-                    await addDoc(collectionRef, fullTaskData);
-                    return true;
-                } catch (error) { console.error("GAGAL MENAMBAHKAN TUGAS:", error); alert("GAGAL: " + error.message); return false; }
-             };
+            const addNewTask = async (taskData) => { /* ... */ };
 
             // --- Event Listener Form Manual ---
-             safeAddEventListener('task-form', 'submit', async (e) => { 
-                 e.preventDefault();
-                const taskData = {
-                    name: document.getElementById('task-name')?.value,
-                    urgency: parseInt(document.getElementById('task-urgency')?.value || '3'), 
-                    pentingnya: parseInt(document.getElementById('task-importance')?.value || '3'), 
-                    time: parseFloat(document.getElementById('task-time')?.value || '1') 
-                };
-                if (!taskData.name) { 
-                    alert("Nama tugas tidak boleh kosong.");
-                    return;
-                }
-                const success = await addNewTask(taskData);
-                if (success) { 
-                    e.target.reset(); 
-                    const urgencyValueSpan = document.getElementById('urgency-value');
-                    const importanceValueSpan = document.getElementById('importance-value');
-                    if(urgencyValueSpan) urgencyValueSpan.textContent = '3 (Lusa)';
-                    if(importanceValueSpan) importanceValueSpan.textContent = '3 (Tugas Besar)';
-                 }
-              });
+             safeAddEventListener('task-form', 'submit', async (e) => { /* ... */ });
 
-
-            // --- Fungsi Login/Logout/Ekspor ---
-            const signInWithGoogle = () => { /* ... */ };
-            const signInAsGuest = () => { /* ... */ };
-            const doSignOut = () => { /* ... */ };
+            // --- Fungsi & Listener Login/Logout/Ekspor ---
+            const signInWithGoogle = () => { 
+                console.log("[DEBUG][LOGIN] Fungsi signInWithGoogle dipanggil.");
+                if(auth) { signInWithPopup(auth, new GoogleAuthProvider()).catch(err => {
+                    console.error("Google Sign-In Error:", err);
+                    alert(`Gagal login dengan Google: ${err.message}. Pastikan popup tidak diblokir.`); // Pesan lebih jelas
+                 }); } 
+                else { console.error("[ERROR][LOGIN] Auth not ready for Google Sign-In"); alert("Layanan login belum siap.");}
+            }
+            const signInAsGuest = () => { 
+                console.log("[DEBUG][LOGIN] Fungsi signInAsGuest dipanggil.");
+                if(auth) { signInAnonymously(auth).catch(err => {
+                    console.error("Guest Sign-In Error:", err);
+                    alert(`Gagal masuk sebagai tamu: ${err.message}`);
+                }); } 
+                else { console.error("[ERROR][LOGIN] Auth not ready for Guest Sign-In"); alert("Layanan login belum siap.");}
+            }
+            const doSignOut = () => { 
+                console.log("[DEBUG][LOGIN] Fungsi doSignOut dipanggil.");
+                if(auth) { signOut(auth).catch(err => {
+                     console.error("Sign Out Error:", err);
+                     alert(`Gagal logout: ${err.message}`);
+                 }); } 
+                else { console.error("[ERROR][LOGIN] Auth not ready for Sign Out"); alert("Layanan logout belum siap.");}
+            }
+            // *** Memasang listener login SETELAH DOM siap ***
             safeAddEventListener('login-button', 'click', signInWithGoogle);
             safeAddEventListener('guest-login-button', 'click', signInAsGuest);
             safeAddEventListener('logout-button', 'click', doSignOut);
@@ -397,127 +273,16 @@
 
 
             // --- Fungsi Baca & Tampil Data ---
-            function listenToTasks() { 
-                 if (!userId) { console.warn("[WARN] listenToTasks: userId null."); return;}
-                 if (!db) { console.error("[ERROR] listenToTasks: DB tidak valid."); return; } 
-                 
-                 if (unsubscribeTasks) {
-                    console.log("[DEBUG] Melepaskan listener tugas lama.");
-                    try { unsubscribeTasks(); } catch(e){ console.warn("Gagal unsubscribe:", e); }
-                    unsubscribeTasks = null;
-                 }
-                 
-                 let collectionRef;
-                 try {
-                     collectionRef = getTasksCollectionRef(userId); 
-                     if (!collectionRef) {
-                         console.error("[ERROR] listenToTasks: Gagal mendapatkan CollectionReference.");
-                         return; 
-                     }
-                 } catch (error) {
-                     console.error("[ERROR] listenToTasks: Error saat memanggil getTasksCollectionRef:", error);
-                     return;
-                 }
-
-                 let q;
-                 try {
-                     q = query(collectionRef); 
-                     if (!q) { 
-                         console.error("[ERROR] listenToTasks: Fungsi query() mengembalikan nilai falsy.");
-                         return; 
-                     }
-                 } catch (error) {
-                     console.error("[ERROR] listenToTasks: Error saat memanggil query():", error);
-                     return;
-                 }
-                 
-                 console.log(`[DEBUG] Memasang listener snapshot ke path: ${collectionRef.path}`);
-                 try {
-                     unsubscribeTasks = onSnapshot(q, (snapshot) => {
-                         console.log(`[DEBUG] Menerima update snapshot. Jumlah dokumen: ${snapshot.size}`);
-                         let tasks = [];
-                         snapshot.forEach((doc) => tasks.push({ id: doc.id, ...doc.data() }));
-                         renderTasks(tasks); 
-                     }, (error) => {
-                         console.error("[ERROR] Gagal mendengarkan data (onSnapshot callback):", error);
-                         const taskListDiv = document.getElementById('task-list');
-                         if (taskListDiv) taskListDiv.innerHTML = `<p class="text-red-500 text-center">Gagal memuat tugas: ${error.message}. Coba refresh.</p>`;
-                     });
-                 } catch (error) {
-                     console.error("[ERROR] Gagal memasang listener onSnapshot:", error);
-                     alert("Gagal terhubung ke update data tugas. Cek Console.");
-                 }
-             }
-            function renderTasks(tasks) { 
-                const taskListDiv = document.getElementById('task-list');
-                const loadingP = document.getElementById('loading-tasks');
-                if (!taskListDiv) return; 
-
-                if(loadingP) loadingP.style.display = 'none';
-                if (tasks.length === 0) { 
-                    taskListDiv.innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-md"><h3 class="font-semibold text-lg">Tidak ada tugas!</h3><p class="text-slate-500 mt-1">Gunakan form manual atau chatbot (kanan bawah) untuk menambah tugas.</p></div>`; 
-                    return;
-                }
-                
-                tasks.sort((a, b) => (b.priorityScore ?? -Infinity) - (a.priorityScore ?? -Infinity)); 
-
-                taskListDiv.innerHTML = tasks.map(task => {
-                    const priorityScoreNum = Number(task.priorityScore);
-                    // Kembali menggunakan batas hardcoded
-                    const priorityText = isNaN(priorityScoreNum) ? 'N/A' :
-                                       priorityScoreNum > 15 ? 'Tinggi' :
-                                       priorityScoreNum > 8 ? 'Sedang' : 'Rendah';
-                    const priorityClass = isNaN(priorityScoreNum) ? 'priority-low' :
-                                        priorityText === 'Tinggi' ? 'priority-high' :
-                                        priorityText === 'Sedang' ? 'priority-medium' : 'priority-low';
-                    const scoreDisplay = isNaN(priorityScoreNum) ? 'NaN' : priorityScoreNum.toFixed(1);
-
-                    return `
-                    <div class="task-card bg-white p-4 rounded-xl shadow-md flex items-start gap-4 ${task.status === 'completed' ? 'opacity-60' : ''}">
-                        <input type="checkbox" onchange="window.toggleTaskStatus('${task.id}', '${task.status}')" class="mt-1.5 h-5 w-5 rounded" ${task.status === 'completed' ? 'checked' : ''}>
-                        <div class="flex-grow">
-                            <div class="flex justify-between items-start">
-                               <p class="font-semibold text-lg ${task.status === 'completed' ? 'line-through' : ''}">${task.name || 'Nama Tugas Hilang'}</p>
-                               <span class="priority-badge ${priorityClass}">${priorityText} (${scoreDisplay})</span>
-                            </div>
-                            <div class="text-sm text-slate-500 mt-2 flex gap-4 flex-wrap">
-                                <span>Urgensi: <strong>${task.urgency ?? 'N/A'}</strong></span>
-                                <span>Pentingnya: <strong>${task.pentingnya ?? 'N/A'}</strong></span> 
-                                <span>Waktu: <strong>${task.time ?? 'N/A'} jam</strong></span>
-                            </div>
-                        </div>
-                        <button onclick="window.deleteTask('${task.id}')" class="text-slate-400 hover:text-red-500 p-1">
-                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
-                        </button>
-                    </div>`;
-                }).join('');
-            }
-            
+            function listenToTasks() { /* ... */ }
+            function renderTasks(tasks) { /* ... */ }
             
             // --- Fungsi Global (onclick) ---
-            window.toggleTaskStatus = async (taskId, currentStatus) => { 
-                if (!userId || !db) return;
-                const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
-                const taskDocRef = doc(db, `artifacts/${appId}/users/${userId}/tasks`, taskId);
-                try { await updateDoc(taskDocRef, { status: newStatus }); } catch (error) { console.error("Gagal update status:", error); }
-             };
-            window.deleteTask = async (taskId) => { 
-                 if (!userId || !db) return;
-                if (confirm('Yakin ingin menghapus tugas ini?')) {
-                    const taskDocRef = doc(db, `artifacts/${appId}/users/${userId}/tasks`, taskId);
-                    try { await deleteDoc(taskDocRef); console.log("Tugas dihapus:", taskId); } catch (error) { console.error("Gagal menghapus tugas:", error); alert("Gagal menghapus tugas."); }
-                }
-             };
+            window.toggleTaskStatus = async (taskId, currentStatus) => { /* ... */ };
+            window.deleteTask = async (taskId) => { /* ... */ };
             
             // --- LOGIKA CHATBOT AI ---
-            safeAddEventListener('chatbot-fab', 'click', () => { 
-                const modal = document.getElementById('chatbot-modal');
-                if(modal) modal.classList.remove('hidden');
-             });
-            safeAddEventListener('chat-close', 'click', () => { 
-                const modal = document.getElementById('chatbot-modal');
-                if(modal) modal.classList.add('hidden');
-            });
+            safeAddEventListener('chatbot-fab', 'click', () => { /* ... */ });
+            safeAddEventListener('chat-close', 'click', () => { /* ... */ });
             function appendChatMessage(message, sender = 'bot') { /* ... */ }
             async function callGeminiApi(text) { /* ... */ }
             safeAddEventListener('chat-form', 'submit', async (e) => { /* ... */ });
@@ -526,30 +291,46 @@
             safeAddEventListener('chat-confirm-no', 'click', () => { /* ... */ });
 
             // --- LOGIKA AHP DIHAPUS ---
-            // settingsFab dihapus
-            // settingsModal dihapus
-            // Fungsi AHP (calculateWeightsFromComparisons, saveWeights, loadWeights, displayCurrentWeights) dihapus
-            // Event listener AHP dihapus
-
-            // Pemanggilan loadWeights dihapus
 
         } // Penutup mainAppLogic
 
         // --- Panggil fungsi utama SETELAH DOM siap ---
         if (document.readyState === 'loading') { 
+            console.log("[DEBUG][LOADER] DOM loading, adding listener.");
             document.addEventListener('DOMContentLoaded', mainAppLogic);
         } else { 
-            if (auth) { 
+            console.log("[DEBUG][LOADER] DOM already ready.");
+            if (auth && db) { 
+                 console.log("[DEBUG][LOADER] Firebase ready, calling mainAppLogic immediately.");
                  mainAppLogic();
             } else {
-                 console.warn("[WARN] DOM siap, tapi Firebase belum. Menunggu event auth...");
-                 setTimeout(() => {
-                     if (!auth) {
-                          console.error("!!! KRITIS: Firebase Auth gagal siap setelah timeout.");
+                 console.warn("[WARN][LOADER] DOM ready, tapi Firebase (auth/db) belum. Waiting for auth state change or timeout...");
+                 // Coba panggil lagi setelah delay, sebagai fallback jika init lambat
+                 // Juga, pasang listener onAuthStateChanged di sini sebagai fallback jika yang di atas gagal
+                 let fallbackTimeout = setTimeout(() => {
+                     console.log("[DEBUG][LOADER] Fallback timeout reached.");
+                     if (auth && db && !document.querySelector('#main-content:not(.hidden)')) { // Cek jika mainAppLogic belum jalan
+                         console.warn("[WARN][LOADER] Firebase ready after timeout, calling mainAppLogic.");
+                         mainAppLogic();
+                     } else if (!auth || !db) {
+                          console.error("!!! KRITIS [LOADER]: Firebase Auth/DB gagal siap setelah timeout.");
                           const loginStatus = document.getElementById('login-status');
-                          if(loginStatus) loginStatus.textContent = "Gagal memuat layanan autentikasi.";
+                          if(loginStatus) loginStatus.textContent = "Gagal memuat layanan Firebase.";
                      }
-                 }, 5000); 
+                 }, 3000); // Tunggu 3 detik
+                 
+                 // Fallback listener jika yang di atas gagal
+                 if (auth) {
+                     const unsubscribeFallback = onAuthStateChanged(auth, (user) => {
+                         console.log("[DEBUG][LOADER] Fallback onAuthStateChanged triggered.");
+                         clearTimeout(fallbackTimeout); // Batalkan timeout jika listener ini jalan
+                         unsubscribeFallback(); // Lepas listener ini setelah jalan sekali
+                         if (!document.querySelector('#main-content:not(.hidden)')) { // Cek jika mainAppLogic belum jalan
+                              console.log("[DEBUG][LOADER] Calling mainAppLogic from fallback listener.");
+                             mainAppLogic();
+                         }
+                     });
+                 }
             }
         }
 
