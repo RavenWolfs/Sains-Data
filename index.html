@@ -17,21 +17,14 @@
         .priority-low { background-color: #D1FAE5; color: #065F46; }
 
         /* Gaya tambahan */
-        #chatbot-fab, #settings-fab {
-            position: fixed;
-            bottom: 2rem;
-            transition: all 0.3s ease;
-            z-index: 40;
-        }
+        #chatbot-fab, #settings-fab { position: fixed; bottom: 2rem; transition: all 0.3s ease; z-index: 40; }
         #chatbot-fab { right: 2rem; }
-        #settings-fab { right: 6.5rem; } /* Posisi tombol settings */
+        #settings-fab { right: 6.5rem; }
         #chatbot-fab:hover, #settings-fab:hover { transform: scale(1.1); }
         #chatbot-modal, #settings-modal { background-color: rgba(0, 0, 0, 0.5); }
         .chat-bubble { max-width: 80%; padding: 0.75rem 1rem; border-radius: 1rem; }
         .chat-bubble-user { background-color: #3B82F6; color: white; border-bottom-right-radius: 0.25rem; align-self: flex-end; }
         .chat-bubble-bot { background-color: #E5E7EB; color: #1F2937; border-bottom-left-radius: 0.25rem; align-self: flex-start; }
-
-        /* Gaya untuk modal AHP */
         .comparison-label { width: 100px; text-align: right; }
         .comparison-slider { flex-grow: 1; margin: 0 1rem; }
     </style>
@@ -46,7 +39,7 @@
 
         <!-- UI Login -->
         <div id="auth-container" class="mb-6 text-center">
-             <div id="login-view">
+            <div id="login-view">
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     <button id="login-button" class="bg-white text-slate-700 font-semibold py-2 px-6 border border-slate-300 rounded-lg shadow-sm hover:bg-slate-100 transition-colors flex items-center justify-center w-full sm:w-auto">
                         <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48" width="48px" height="48px"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.902,36.632,44,30.852,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path></svg>
@@ -92,7 +85,19 @@
                     <h2 class="text-xl font-semibold">Daftar Tugas Anda (Diurutkan)</h2>
                 </div>
                 <div id="admin-panel" class="hidden bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
-                   <!-- ... (Panel Admin) ... -->
+                   <!-- Panel Admin -->
+                   <h3 class="text-lg font-semibold text-yellow-900">Panel Admin</h3>
+                   <p class="text-sm text-yellow-700 mb-3">Pilih pengguna untuk mengunduh data tugas mereka.</p>
+                   <div class="flex flex-col sm:flex-row gap-2">
+                       <label for="user-select-dropdown" class="sr-only">Pilih pengguna</label>
+                       <select id="user-select-dropdown" class="grow px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                           <option value="">Memuat daftar pengguna...</option>
+                       </select>
+                       <button id="download-button" class="bg-green-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                           Download Data
+                       </button>
+                   </div>
                 </div>
                 <div id="task-list" class="space-y-4">
                     <p id="loading-tasks" class="text-slate-500 text-center">Memuat tugas...</p>
@@ -101,35 +106,58 @@
         </main>
     </div>
 
-    <!-- Tombol FAB Chatbot -->
+    <!-- Tombol FAB -->
     <button id="chatbot-fab" class="hidden bg-blue-600 text-white p-4 rounded-full shadow-lg" title="Buka Asisten Tugas" aria-label="Buka Asisten Tugas">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
         <span class="sr-only">Buka Asisten Tugas</span>
     </button>
-    <!-- Tombol FAB Settings (AHP) -->
     <button id="settings-fab" class="hidden bg-gray-700 text-white p-4 rounded-full shadow-lg" title="Atur Bobot (AHP)" aria-label="Atur Bobot Prioritas">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
         <span class="sr-only">Atur Bobot Prioritas</span>
     </button>
-    <!-- PERBAIKAN: Menghapus tag </button> ekstra -->
-
+    <!-- Tag </button> ekstra dihapus -->
 
     <!-- Modal Chatbot -->
     <div id="chatbot-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col" style="height: 70vh;">
-            <!-- ... (Konten Modal Chatbot) ... -->
-             <div class="flex justify-between items-center p-4 border-b border-gray-200"> <h3 class="text-lg font-semibold">Asisten Tugas AI</h3> <button id="chat-close" class="text-gray-400 hover:text-gray-600" aria-label="Tutup obrolan" title="Tutup obrolan"> <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg> </button> </div> <div id="chat-messages" class="flex-grow p-4 space-y-4 overflow-y-auto flex flex-col"> </div> <div id="chat-confirmation" class="hidden p-4 border-t border-gray-200 bg-gray-50 text-center"> <p id="chat-confirmation-text" class="text-sm mb-2"></p> <div class="flex gap-4 justify-center"> <button id="chat-confirm-yes" class="bg-green-500 text-white py-1 px-4 rounded-lg hover:bg-green-600">Ya</button> <button id="chat-confirm-no" class="bg-red-500 text-white py-1 px-4 rounded-lg hover:bg-red-600">Batal</button> </div> </div> <div id="chat-input-area" class="p-4 border-t border-gray-200"> <form id="chat-form" class="flex gap-2"> <input type="text" id="chat-input" placeholder="Ketik tugas..." class="flex-grow px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"> <button type="submit" id="chat-send" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700"> Kirim </button> </form> </div>
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col" style="height: 70vh;">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold">Asisten Tugas AI</h3>
+                <button id="chat-close" class="text-gray-400 hover:text-gray-600" aria-label="Tutup"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <!-- Chat Messages -->
+            <div id="chat-messages" class="flex-grow p-4 space-y-4 overflow-y-auto flex flex-col"></div>
+            <!-- Chat Confirmation -->
+            <div id="chat-confirmation" class="hidden p-4 border-t border-gray-200 bg-gray-50 text-center">
+                <p id="chat-confirmation-text" class="text-sm mb-2"></p>
+                <div class="flex gap-4 justify-center"> <button id="chat-confirm-yes" class="bg-green-500 text-white py-1 px-4 rounded-lg hover:bg-green-600">Ya</button> <button id="chat-confirm-no" class="bg-red-500 text-white py-1 px-4 rounded-lg hover:bg-red-600">Batal</button> </div>
+            </div>
+            <!-- Chat Input -->
+            <div id="chat-input-area" class="p-4 border-t border-gray-200">
+                <form id="chat-form" class="flex gap-2"> <input type="text" id="chat-input" placeholder="Ketik tugas..." class="flex-grow px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"> <button type="submit" id="chat-send" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700"> Kirim </button> </form>
+            </div>
         </div>
     </div>
 
     <!-- Modal Settings (AHP Sederhana) -->
     <div id="settings-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col">
-            <!-- ... (Konten Modal Settings) ... -->
-             <div class="flex justify-between items-center p-4 border-b border-gray-200"> <h3 class="text-lg font-semibold">Atur Bobot Prioritas</h3> <button id="settings-close" class="text-gray-400 hover:text-gray-600" title="Tutup pengaturan" aria-label="Tutup pengaturan"> <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg> </button> </div> <div class="p-6 space-y-6"> <p class="text-sm text-slate-600">Seberapa penting kriteria kiri vs kanan?</p> <div class="flex items-center"> <span class="comparison-label font-medium text-slate-700">Urgensi</span> <input type="range" id="compare-urgency-importance" min="-2" max="2" value="0" step="1" class="comparison-slider h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer" aria-label="Perbandingan Urgensi dan Pentingnya" title="Seberapa penting Urgensi dibanding Pentingnya"> <span class="comparison-label font-medium text-slate-700 text-left">Pentingnya</span> </div> <p id="compare-urgency-importance-label" class="text-sm text-center text-slate-500 -mt-4">Sama Penting</p> <div class="flex items-center"> <span class="comparison-label font-medium text-slate-700">Urgensi</span> <input type="range" id="compare-urgency-time" min="-2" max="2" value="0" step="1" class="comparison-slider h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer" title="Seberapa penting Urgensi dibanding Waktu"> <span class="comparison-label font-medium text-slate-700 text-left">Waktu</span> </div> <p id="compare-urgency-time-label" class="text-sm text-center text-slate-500 -mt-4">Sama Penting</p> <div class="flex items-center"> <span class="comparison-label font-medium text-slate-700">Pentingnya</span> <input type="range" id="compare-importance-time" min="-2" max="2" value="0" step="1" class="comparison-slider h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer" title="Seberapa penting Pentingnya dibanding Waktu"> <span class="comparison-label font-medium text-slate-700 text-left">Waktu</span> </div> <p id="compare-importance-time-label" class="text-sm text-center text-slate-500 -mt-4">Sama Penting</p> <div class="text-center mt-6"> <button id="save-weights" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors">Simpan Bobot</button> </div> <p id="calculated-weights-display" class="text-xs text-slate-400 mt-2 text-center">Bobot terhitung: -</p> </div>
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold">Atur Bobot Prioritas</h3>
+                <button id="settings-close" class="text-gray-400 hover:text-gray-600" aria-label="Tutup"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <!-- Modal Content -->
+            <div class="p-6 space-y-6">
+                 <p class="text-sm text-slate-600">Seberapa penting kriteria kiri vs kanan?</p>
+                 <div class="flex items-center"> <span class="comparison-label font-medium text-slate-700">Urgensi</span> <input type="range" id="compare-urgency-importance" min="-2" max="2" value="0" step="1" class="comparison-slider h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"> <span class="comparison-label font-medium text-slate-700 text-left">Pentingnya</span> </div> <p id="compare-urgency-importance-label" class="text-sm text-center text-slate-500 -mt-4">Sama Penting</p>
+                 <div class="flex items-center"> <span class="comparison-label font-medium text-slate-700">Urgensi</span> <input type="range" id="compare-urgency-time" min="-2" max="2" value="0" step="1" class="comparison-slider h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"> <span class="comparison-label font-medium text-slate-700 text-left">Waktu</span> </div> <p id="compare-urgency-time-label" class="text-sm text-center text-slate-500 -mt-4">Sama Penting</p>
+                 <div class="flex items-center"> <span class="comparison-label font-medium text-slate-700">Pentingnya</span> <input type="range" id="compare-importance-time" min="-2" max="2" value="0" step="1" class="comparison-slider h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"> <span class="comparison-label font-medium text-slate-700 text-left">Waktu</span> </div> <p id="compare-importance-time-label" class="text-sm text-center text-slate-500 -mt-4">Sama Penting</p>
+                 <div class="text-center mt-6"> <button id="save-weights" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors">Simpan Bobot</button> </div>
+                 <p id="calculated-weights-display" class="text-xs text-slate-400 mt-2 text-center">Bobot terhitung: -</p>
+            </div>
         </div>
     </div>
-
 
     <!-- Firebase SDK -->
     <script type="module">
@@ -140,7 +168,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyC4WwUhxG5XROTr5lSHvhDS4zj2Lqmw1U0",
             authDomain: "asisten-tugas-pribadi.firebaseapp.com",
-            projectId: "asisten-tugas-pribadi", 
+            projectId: "asisten-tugas-pribadi",
             storageBucket: "asisten-tugas-pribadi.appspot.com",
             messagingSenderId: "994319187177",
             appId: "1:994319187177:web:58ebbc1fce8645eabd4478"
@@ -169,51 +197,31 @@
             let weights = { urgency: 3.5, pentingnya: 2.5, time: -0.5 }; 
             const currentWeightsDisplayApp = document.getElementById('current-weights-display');
 
-            // Elemen UI
-            const loginView = document.getElementById('login-view');
-            const userView = document.getElementById('user-view');
-            const mainContent = document.getElementById('main-content');
-            const userEmailSpan = document.getElementById('user-email');
-            const loginButton = document.getElementById('login-button');
-            const logoutButton = document.getElementById('logout-button');
-            const guestLoginButton = document.getElementById('guest-login-button');
-            const taskForm = document.getElementById('task-form');
-            const taskListDiv = document.getElementById('task-list');
-            const adminPanel = document.getElementById('admin-panel');
-            const userSelectDropdown = document.getElementById('user-select-dropdown');
-            const downloadButton = document.getElementById('download-button');
-            const chatbotFab = document.getElementById('chatbot-fab');
-            const chatbotModal = document.getElementById('chatbot-modal');
-            const chatCloseButton = document.getElementById('chat-close');
-            const chatMessages = document.getElementById('chat-messages'); 
-            const chatForm = document.getElementById('chat-form');         
-            const chatInput = document.getElementById('chat-input');       
-            const chatInputArea = document.getElementById('chat-input-area'); 
-            const chatConfirmation = document.getElementById('chat-confirmation'); 
-            const chatConfirmationText = document.getElementById('chat-confirmation-text'); 
-            const chatConfirmYes = document.getElementById('chat-confirm-yes'); 
-            const chatConfirmNo = document.getElementById('chat-confirm-no');   
-            const settingsFab = document.getElementById('settings-fab');
-            const settingsModal = document.getElementById('settings-modal');
-            const settingsCloseButton = document.getElementById('settings-close');
-            const compareUrgencyImportance = document.getElementById('compare-urgency-importance');
-            const compareUrgencyTime = document.getElementById('compare-urgency-time');
-            const compareImportanceTime = document.getElementById('compare-importance-time');
-            const compareUrgencyImportanceLabel = document.getElementById('compare-urgency-importance-label');
-            const compareUrgencyTimeLabel = document.getElementById('compare-urgency-time-label');
-            const compareImportanceTimeLabel = document.getElementById('compare-importance-time-label');
-            const saveWeightsButton = document.getElementById('save-weights');
-            const calculatedWeightsDisplay = document.getElementById('calculated-weights-display');
-            const urgencySlider = document.getElementById('task-urgency');
-            const importanceSlider = document.getElementById('task-importance');
-            const urgencyValue = document.getElementById('urgency-value');
-            const importanceValue = document.getElementById('importance-value');
+            // --- Fungsi utilitas untuk menambah event listener dengan aman ---
+            function safeAddEventListener(elementId, event, handler) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.addEventListener(event, handler);
+                    // console.log(`[DEBUG] Listener added for ${event} on #${elementId}`);
+                } else {
+                    console.error(`!!! KRITIS: Elemen dengan ID "${elementId}" tidak ditemukan. Listener tidak bisa ditambahkan.`);
+                }
+            }
+
+            // --- Elemen UI (Tidak perlu variabel global jika hanya untuk listener) ---
+            // const loginView = document.getElementById('login-view'); // Contoh: Ini masih perlu jika diakses di tempat lain
 
             // --- Logika Label Slider Manual ---
             const urgencyLabels = { 1: 'Santai (> Seminggu)', 2: 'Minggu Ini', 3: 'Lusa', 4: 'Besok', 5: 'Hari Ini (Mendesak)' };
             const importanceLabels = { 1: 'Catatan', 2: 'Tugas Harian', 3: 'Tugas Besar/Projek', 4: 'Kuis/Presentasi', 5: 'Ujian/Final' };
-            urgencySlider.addEventListener('input', () => { urgencyValue.textContent = `${urgencySlider.value} (${urgencyLabels[urgencySlider.value]})`; });
-            importanceSlider.addEventListener('input', () => { importanceValue.textContent = `${importanceSlider.value} (${importanceLabels[importanceSlider.value]})`; });
+            safeAddEventListener('task-urgency', 'input', (e) => { 
+                const valueSpan = document.getElementById('urgency-value');
+                if(valueSpan) valueSpan.textContent = `${e.target.value} (${urgencyLabels[e.target.value]})`; 
+            });
+            safeAddEventListener('task-importance', 'input', (e) => { 
+                const valueSpan = document.getElementById('importance-value');
+                if(valueSpan) valueSpan.textContent = `${e.target.value} (${importanceLabels[e.target.value]})`; 
+            });
 
             // --- Fungsi Admin ---
             const checkAdminStatus = async (user) => { /* ... */ };
@@ -221,19 +229,27 @@
 
             // --- Otak Aplikasi: onAuthStateChanged ---
             onAuthStateChanged(auth, async (user) => {
-                // Sembunyikan elemen dinamis
-                adminPanel.classList.add('hidden');
-                chatbotFab.classList.add('hidden');
-                settingsFab.classList.add('hidden');
+                 const adminPanel = document.getElementById('admin-panel');
+                 const chatbotFab = document.getElementById('chatbot-fab');
+                 const settingsFab = document.getElementById('settings-fab');
+                 const loginView = document.getElementById('login-view');
+                 const userView = document.getElementById('user-view');
+                 const mainContent = document.getElementById('main-content');
+                 const userEmailSpan = document.getElementById('user-email');
+
+                 // Pastikan elemen ada sebelum manipulasi classList
+                 if(adminPanel) adminPanel.classList.add('hidden');
+                 if(chatbotFab) chatbotFab.classList.add('hidden');
+                 if(settingsFab) settingsFab.classList.add('hidden');
 
                 if (user) {
                     userId = user.uid; 
-                    userEmailSpan.innerHTML = user.isAnonymous ? `Tamu (${user.uid.substring(0, 6)}...)` : user.email;
-                    loginView.classList.add('hidden');
-                    userView.classList.remove('hidden');
-                    mainContent.classList.remove('hidden');
-                    chatbotFab.classList.remove('hidden'); 
-                    settingsFab.classList.remove('hidden'); 
+                    if(userEmailSpan) userEmailSpan.innerHTML = user.isAnonymous ? `Tamu (${user.uid.substring(0, 6)}...)` : user.email;
+                    if(loginView) loginView.classList.add('hidden');
+                    if(userView) userView.classList.remove('hidden');
+                    if(mainContent) mainContent.classList.remove('hidden');
+                    if(chatbotFab) chatbotFab.classList.remove('hidden'); 
+                    if(settingsFab) settingsFab.classList.remove('hidden'); 
                     
                     if (await checkAdminStatus(user)) {
                         loadUserListForAdmin(); // Memuat daftar jika admin
@@ -242,9 +258,9 @@
                     listenToTasks();
                 } else {
                     userId = null;
-                    loginView.classList.remove('hidden');
-                    userView.classList.add('hidden');
-                    mainContent.classList.add('hidden');
+                     if(loginView) loginView.classList.remove('hidden');
+                     if(userView) userView.classList.add('hidden');
+                     if(mainContent) mainContent.classList.add('hidden');
                     if (unsubscribeTasks) unsubscribeTasks();
                     renderTasks([]);
                 }
@@ -264,87 +280,108 @@
             const addNewTask = async (taskData) => { /* ... */ };
 
             // --- Event Listener Form Manual ---
-            taskForm.addEventListener('submit', async (e) => { /* ... */ });
+             safeAddEventListener('task-form', 'submit', async (e) => {
+                e.preventDefault();
+                const taskData = {
+                    name: document.getElementById('task-name')?.value, // Tambahkan null check
+                    urgency: parseInt(document.getElementById('task-urgency')?.value || '3'), // Default jika null
+                    pentingnya: parseInt(document.getElementById('task-importance')?.value || '3'), // Default jika null
+                    time: parseFloat(document.getElementById('task-time')?.value || '1') // Default jika null
+                };
+                if (!taskData.name) { // Validasi nama
+                    alert("Nama tugas tidak boleh kosong.");
+                    return;
+                }
+                const success = await addNewTask(taskData);
+                if (success) { 
+                    e.target.reset(); 
+                    const urgencyValueSpan = document.getElementById('urgency-value');
+                    const importanceValueSpan = document.getElementById('importance-value');
+                    if(urgencyValueSpan) urgencyValueSpan.textContent = '3 (Lusa)';
+                    if(importanceValueSpan) importanceValueSpan.textContent = '3 (Tugas Besar)';
+                 }
+            });
+
 
             // --- Fungsi Login/Logout/Ekspor ---
             const signInWithGoogle = () => signInWithPopup(auth, new GoogleAuthProvider()).catch(err => console.error(err));
             const signInAsGuest = () => signInAnonymously(auth).catch(err => console.error(err));
             const doSignOut = () => signOut(auth).catch(err => console.error(err));
-            loginButton.addEventListener('click', signInWithGoogle);
-            guestLoginButton.addEventListener('click', signInAsGuest);
-            logoutButton.addEventListener('click', doSignOut);
-            const exportSelectedUserCsv = async () => { /* ... */ };
-            downloadButton.addEventListener('click', exportSelectedUserCsv);
+            safeAddEventListener('login-button', 'click', signInWithGoogle);
+            safeAddEventListener('guest-login-button', 'click', signInAsGuest);
+            safeAddEventListener('logout-button', 'click', doSignOut);
+            
+            const exportSelectedUserCsv = async () => { 
+                const userSelectDropdown = document.getElementById('user-select-dropdown'); // Cari di dalam fungsi
+                if(!userSelectDropdown) return;
+                const selectedUserId = userSelectDropdown.value;
+                 /* ... (logika ekspor) ... */ 
+            };
+            safeAddEventListener('download-button', 'click', exportSelectedUserCsv);
+
 
             // --- Fungsi Baca & Tampil Data ---
             function listenToTasks() { /* ... */ }
-            function renderTasks(tasks) { /* ... (Kode render sudah benar) ... */ }
+            function renderTasks(tasks) { /* ... */ }
             
             // --- Fungsi Global (onclick) ---
-            // PERBAIKAN: Memastikan fungsi ini ada di scope global
-            window.toggleTaskStatus = async (taskId, currentStatus) => {
-                if (!userId) { console.error("User ID null"); return; }
-                const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
-                const taskDocRef = doc(db, `artifacts/${appId}/users/${userId}/tasks`, taskId);
-                try {
-                    await updateDoc(taskDocRef, { status: newStatus });
-                } catch (error) {
-                    console.error("Gagal update status:", error);
-                }
-            };
-            window.deleteTask = async (taskId) => {
-                if (!userId) { console.error("User ID null"); return; }
-                if (confirm('Yakin ingin menghapus tugas ini?')) {
-                    const taskDocRef = doc(db, `artifacts/${appId}/users/${userId}/tasks`, taskId);
-                    try {
-                        await deleteDoc(taskDocRef);
-                        console.log("Tugas dihapus:", taskId);
-                    } catch (error) {
-                         console.error("Gagal menghapus tugas:", error);
-                         alert("Gagal menghapus tugas. Cek console.");
-                    }
-                }
-            };
+            window.toggleTaskStatus = async (taskId, currentStatus) => { /* ... */ };
+            window.deleteTask = async (taskId) => { /* ... */ };
             
             // --- LOGIKA CHATBOT AI ---
-            // PERBAIKAN: Memastikan listener terpasang
-            chatbotFab.addEventListener('click', () => {
-                console.log("Chatbot FAB clicked"); // Debug
-                chatbotModal.classList.remove('hidden');
+            safeAddEventListener('chatbot-fab', 'click', () => {
+                const modal = document.getElementById('chatbot-modal');
+                if(modal) modal.classList.remove('hidden');
             });
-            chatCloseButton.addEventListener('click', () => {
-                console.log("Chat Close clicked"); // Debug
-                chatbotModal.classList.add('hidden');
+            safeAddEventListener('chat-close', 'click', () => {
+                const modal = document.getElementById('chatbot-modal');
+                if(modal) modal.classList.add('hidden');
             });
 
             function appendChatMessage(message, sender = 'bot') { /* ... */ }
             async function callGeminiApi(text) { /* ... */ }
-            chatForm.addEventListener('submit', async (e) => { /* ... */ });
+            safeAddEventListener('chat-form', 'submit', async (e) => { /* ... */ });
             function resetChat() { /* ... */ }
-            chatConfirmYes.addEventListener('click', async () => { /* ... */ });
-            chatConfirmNo.addEventListener('click', () => { /* ... */ });
+            safeAddEventListener('chat-confirm-yes', 'click', async () => { /* ... */ });
+            safeAddEventListener('chat-confirm-no', 'click', () => { /* ... */ });
 
             // --- LOGIKA AHP SEDERHANA ---
-             // PERBAIKAN: Memastikan listener terpasang
-            settingsFab.addEventListener('click', () => {
-                console.log("Settings FAB clicked"); // Debug
-                settingsModal.classList.remove('hidden');
+            safeAddEventListener('settings-fab', 'click', () => {
+                const modal = document.getElementById('settings-modal');
+                if(modal) modal.classList.remove('hidden');
             });
-            settingsCloseButton.addEventListener('click', () => {
-                 console.log("Settings Close clicked"); // Debug
-                settingsModal.classList.add('hidden');
+            safeAddEventListener('settings-close', 'click', () => {
+                const modal = document.getElementById('settings-modal');
+                if(modal) modal.classList.add('hidden');
             });
 
-            const comparisonLabels = { /* ... */ };
-            function updateComparisonLabel(slider, labelElement) { /* ... */ }
-            compareUrgencyImportance.addEventListener('input', () => updateComparisonLabel(compareUrgencyImportance, compareUrgencyImportanceLabel));
-            compareUrgencyTime.addEventListener('input', () => updateComparisonLabel(compareUrgencyTime, compareUrgencyTimeLabel));
-            compareImportanceTime.addEventListener('input', () => updateComparisonLabel(compareImportanceTime, compareImportanceTimeLabel));
+            const comparisonLabels = { "-2": "Jauh Kanan", "-1": "Sedikit Kanan", "0": "Sama", "1": "Sedikit Kiri", "2": "Jauh Kiri"}; // Disederhanakan
+            function updateComparisonLabel(sliderId, labelId) { 
+                const slider = document.getElementById(sliderId);
+                const labelElement = document.getElementById(labelId);
+                if(slider && labelElement) {
+                     labelElement.textContent = comparisonLabels[slider.value];
+                }
+            }
+            safeAddEventListener('compare-urgency-importance', 'input', () => updateComparisonLabel('compare-urgency-importance', 'compare-urgency-importance-label'));
+            safeAddEventListener('compare-urgency-time', 'input', () => updateComparisonLabel('compare-urgency-time', 'compare-urgency-time-label'));
+            safeAddEventListener('compare-importance-time', 'input', () => updateComparisonLabel('compare-importance-time', 'compare-importance-time-label'));
+            
             function calculateWeightsFromComparisons() { /* ... */ }
             function saveWeights(newWeights) { /* ... */ }
             function loadWeights() { /* ... */ }
             function displayCurrentWeights() { /* ... */ }
-            saveWeightsButton.addEventListener('click', () => { /* ... */ });
+            
+            safeAddEventListener('save-weights', 'click', () => { 
+                const newWeights = calculateWeightsFromComparisons();
+                const calculatedWeightsDisplay = document.getElementById('calculated-weights-display');
+                if(calculatedWeightsDisplay) calculatedWeightsDisplay.textContent = `Hitung: U=${newWeights.urgency}, P=${newWeights.pentingnya}, W=${newWeights.time}`;
+                if(confirm(`Simpan bobot baru?\nU:${newWeights.urgency}, P:${newWeights.pentingnya}, W:${newWeights.time}`)) {
+                    saveWeights(newWeights);
+                    const modal = document.getElementById('settings-modal');
+                    if(modal) modal.classList.add('hidden'); 
+                }
+            });
 
             // Panggil loadWeights saat awal
             loadWeights();
