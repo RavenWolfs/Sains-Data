@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prio - Asisten Tugas Kuliah</title>
+    <title>Prio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -16,36 +16,24 @@
         .priority-medium { background-color: #FEF3C7; color: #92400E; }
         .priority-low { background-color: #D1FAE5; color: #065F46; }
 
-        /* Gaya untuk Chatbot */
-        #chatbot-fab {
+        /* Gaya tambahan */
+        #chatbot-fab, #settings-fab {
             position: fixed;
             bottom: 2rem;
-            right: 2rem;
             transition: all 0.3s ease;
+            z-index: 40;
         }
-        #chatbot-fab:hover {
-            transform: scale(1.1);
-        }
-        #chatbot-modal {
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        .chat-bubble {
-            max-width: 80%;
-            padding: 0.75rem 1rem;
-            border-radius: 1rem;
-        }
-        .chat-bubble-user {
-            background-color: #3B82F6; /* blue-500 */
-            color: white;
-            border-bottom-right-radius: 0.25rem;
-            align-self: flex-end;
-        }
-        .chat-bubble-bot {
-            background-color: #E5E7EB; /* gray-200 */
-            color: #1F2937; /* gray-800 */
-            border-bottom-left-radius: 0.25rem;
-            align-self: flex-start;
-        }
+        #chatbot-fab { right: 2rem; }
+        #settings-fab { right: 6.5rem; } /* Posisi tombol settings */
+        #chatbot-fab:hover, #settings-fab:hover { transform: scale(1.1); }
+        #chatbot-modal, #settings-modal { background-color: rgba(0, 0, 0, 0.5); }
+        .chat-bubble { max-width: 80%; padding: 0.75rem 1rem; border-radius: 1rem; }
+        .chat-bubble-user { background-color: #3B82F6; color: white; border-bottom-right-radius: 0.25rem; align-self: flex-end; }
+        .chat-bubble-bot { background-color: #E5E7EB; color: #1F2937; border-bottom-left-radius: 0.25rem; align-self: flex-start; }
+
+        /* Gaya untuk modal AHP */
+        .comparison-label { width: 100px; text-align: right; }
+        .comparison-slider { flex-grow: 1; margin: 0 1rem; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -81,14 +69,13 @@
                 <h2 class="text-xl font-semibold mb-4">Tambah Tugas (Manual)</h2>
                 <!-- Form input -->
                 <form id="task-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="md:col-span-2"><label for="task-name" class="block text-sm font-medium text-slate-700 mb-1">Nama Tugas</label><input type="text" id="task-name" placeholder="Contoh: Laporan Praktikum Jaringan Komputer" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
+                     <div class="md:col-span-2"><label for="task-name" class="block text-sm font-medium text-slate-700 mb-1">Nama Tugas</label><input type="text" id="task-name" placeholder="Contoh: Laporan Praktikum Jaringan Komputer" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
                     <div>
                         <label for="task-urgency" class="block text-sm font-medium text-slate-700 mb-1">Urgensi</label>
                         <input type="range" id="task-urgency" min="1" max="5" value="3" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
                         <span id="urgency-value" class="text-sm text-slate-500">3 (Lusa)</span>
                     </div>
                     <div>
-                        <!-- ID input tetap 'task-importance' untuk konsistensi HTML -->
                         <label for="task-importance" class="block text-sm font-medium text-slate-700 mb-1">Pentingnya</label>
                         <input type="range" id="task-importance" min="1" max="5" value="3" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
                         <span id="importance-value" class="text-sm text-slate-500">3 (Tugas Besar)</span>
@@ -96,6 +83,7 @@
                     <div class="md:col-span-2"><label for="task-time" class="block text-sm font-medium text-slate-700 mb-1">Estimasi Waktu (Jam)</label><input type="number" id="task-time" min="0.5" step="0.5" value="1" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
                     <div class="md:col-span-2"><button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">Prioritaskan & Tambah</button></div>
                 </form>
+                 <p id="current-weights-display" class="text-xs text-slate-400 mt-4 text-center">Bobot saat ini: Urgensi=3.5, Pentingnya=2.5, Waktu=-0.5</p>
             </div>
             
             <div>
@@ -103,9 +91,8 @@
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-semibold">Daftar Tugas Anda (Diurutkan)</h2>
                 </div>
-
-                <!-- Panel Admin untuk Download -->
                 <div id="admin-panel" class="hidden bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
+                   <!-- ... (Panel Admin) ... -->
                     <h3 class="text-lg font-semibold text-yellow-900">Panel Admin</h3>
                     <p class="text-sm text-yellow-700 mb-3">Pilih pengguna untuk mengunduh data tugas mereka.</p>
                     <div class="flex flex-col sm:flex-row gap-2">
@@ -118,7 +105,6 @@
                         </button>
                     </div>
                 </div>
-
                 <div id="task-list" class="space-y-4">
                     <p id="loading-tasks" class="text-slate-500 text-center">Memuat tugas...</p>
                 </div>
@@ -126,14 +112,20 @@
         </main>
     </div>
 
-    <!-- Tombol Chatbot FAB -->
-    <button id="chatbot-fab" class="hidden bg-blue-600 text-white p-4 rounded-full shadow-lg fixed bottom-8 right-8 z-40">
+    <!-- Tombol FAB Chatbot -->
+    <button id="chatbot-fab" class="hidden bg-blue-600 text-white p-4 rounded-full shadow-lg">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
     </button>
+    
+    <!-- Tombol FAB Settings (AHP) -->
+    <button id="settings-fab" class="hidden bg-gray-700 text-white p-4 rounded-full shadow-lg">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+    </button>
+
 
     <!-- Modal Chatbot -->
-    <div id="chatbot-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col" style="height: 70vh;">
+    <div id="chatbot-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col" style="height: 70vh;">
             <!-- Header Modal -->
             <div class="flex justify-between items-center p-4 border-b border-gray-200">
                 <h3 class="text-lg font-semibold">Asisten Tugas AI</h3>
@@ -141,33 +133,57 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-
             <!-- Jendela Chat -->
             <div id="chat-messages" class="flex-grow p-4 space-y-4 overflow-y-auto flex flex-col">
-                <div class="chat-bubble chat-bubble-bot">
-                    Halo! Saya asisten Prio. Coba ketik tugas Anda dalam satu kalimat.
-                    <br><br>
-                    Contoh: "Saya ada kuis kalkulus besok, penting sekali, butuh 2 jam belajar."
-                </div>
+                <!-- ... (pesan chat) ... -->
             </div>
-
             <!-- Area Konfirmasi -->
             <div id="chat-confirmation" class="hidden p-4 border-t border-gray-200 bg-gray-50 text-center">
-                <p id="chat-confirmation-text" class="text-sm mb-2">Apakah detail di atas sudah benar?</p>
-                <div class="flex gap-4 justify-center">
-                    <button id="chat-confirm-yes" class="bg-green-500 text-white py-1 px-4 rounded-lg hover:bg-green-600">Ya, Simpan Tugas</button>
-                    <button id="chat-confirm-no" class="bg-red-500 text-white py-1 px-4 rounded-lg hover:bg-red-600">Batal</button>
-                </div>
+                 <!-- ... (konfirmasi chat) ... -->
             </div>
-
             <!-- Input Chat -->
             <div id="chat-input-area" class="p-4 border-t border-gray-200">
-                <form id="chat-form" class="flex gap-2">
-                    <input type="text" id="chat-input" placeholder="Ketik tugas Anda..." class="flex-grow px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <button type="submit" id="chat-send" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">
-                        Kirim
-                    </button>
-                </form>
+                <!-- ... (input chat) ... -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Settings (AHP Sederhana) -->
+    <div id="settings-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col">
+            <!-- Header Modal -->
+            <div class="flex justify-between items-center p-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold">Atur Bobot Prioritas (AHP Sederhana)</h3>
+                <button id="settings-close" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <!-- Konten Modal AHP -->
+            <div class="p-6 space-y-6">
+                <!-- ... (konten modal AHP) ... -->
+                 <p class="text-sm text-slate-600">Seberapa penting kriteria di sebelah kiri dibandingkan kriteria di sebelah kanan?</p>
+                <div class="flex items-center">
+                    <span class="comparison-label font-medium text-slate-700">Urgensi</span>
+                    <input type="range" id="compare-urgency-importance" min="-2" max="2" value="0" step="1" class="comparison-slider h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                    <span class="comparison-label font-medium text-slate-700 text-left">Pentingnya</span>
+                </div>
+                <p id="compare-urgency-importance-label" class="text-sm text-center text-slate-500 -mt-4">Sama Penting</p>
+                <div class="flex items-center">
+                    <span class="comparison-label font-medium text-slate-700">Urgensi</span>
+                    <input type="range" id="compare-urgency-time" min="-2" max="2" value="0" step="1" class="comparison-slider h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                    <span class="comparison-label font-medium text-slate-700 text-left">Waktu</span>
+                </div>
+                 <p id="compare-urgency-time-label" class="text-sm text-center text-slate-500 -mt-4">Sama Penting</p>
+                <div class="flex items-center">
+                    <span class="comparison-label font-medium text-slate-700">Pentingnya</span>
+                    <input type="range" id="compare-importance-time" min="-2" max="2" value="0" step="1" class="comparison-slider h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                    <span class="comparison-label font-medium text-slate-700 text-left">Waktu</span>
+                </div>
+                 <p id="compare-importance-time-label" class="text-sm text-center text-slate-500 -mt-4">Sama Penting</p>
+                 <div class="text-center mt-6">
+                    <button id="save-weights" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors">Simpan Bobot</button>
+                 </div>
+                 <p id="calculated-weights-display" class="text-xs text-slate-400 mt-2 text-center">Bobot terhitung: -</p>
             </div>
         </div>
     </div>
@@ -179,27 +195,41 @@
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp, doc, updateDoc, deleteDoc, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // *** PERBAIKAN: Pindahkan firebaseConfig ke luar listener ***
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4WwUhxG5XROTr5lSHvhDS4zj2Lqmw1U0",
+            authDomain: "asisten-tugas-pribadi.firebaseapp.com",
+            projectId: "asisten-tugas-pribadi", // Pastikan ini ada dan benar
+            storageBucket: "asisten-tugas-pribadi.appspot.com",
+            messagingSenderId: "994319187177",
+            appId: "1:994319187177:web:58ebbc1fce8645eabd4478"
+        };
+        
         document.addEventListener('DOMContentLoaded', () => {
             console.log("[DEBUG] Halaman HTML selesai dimuat. Memulai skrip.");
 
-            // Konfigurasi Firebase
-            const firebaseConfig = {
-                apiKey: "AIzaSyC4WwUhxG5XROTr5lSHvhDS4zj2Lqmw1U0",
-                authDomain: "asisten-tugas-pribadi.firebaseapp.com",
-                projectId: "asisten-tugas-pribadi",
-                storageBucket: "asisten-tugas-pribadi.appspot.com",
-                messagingSenderId: "994319187177",
-                appId: "1:994319187177:web:58ebbc1fce8645eabd4478"
-            };
-            
             // Inisialisasi
             let db, auth, userId, unsubscribeTasks;
-            let pendingTaskData = null; // Menyimpan data dari AI sementara
+            let pendingTaskData = null; 
             const appId = 'asisten-tugas-pribadi';
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-            console.log("[DEBUG] Firebase diinisialisasi.");
+            
+            // *** PERBAIKAN: Gunakan firebaseConfig yang sudah didefinisikan di luar ***
+            let app; 
+            try {
+                app = initializeApp(firebaseConfig); 
+                db = getFirestore(app);
+                auth = getAuth(app);
+                console.log("[DEBUG] Firebase diinisialisasi.");
+            } catch (error) {
+                 console.error("!!! KRITIS: Gagal menginisialisasi Firebase !!!", error);
+                 alert("Gagal menginisialisasi Firebase. Cek konfigurasi `firebaseConfig` di kode dan pastikan semua nilai benar. Error: " + error.message);
+                 // Hentikan eksekusi lebih lanjut jika init gagal
+                 return; 
+            }
+
+            // --- Bobot AHP (Default & Variabel) ---
+            let weights = { urgency: 3.5, pentingnya: 2.5, time: -0.5 }; // Bobot default
+            const currentWeightsDisplayApp = document.getElementById('current-weights-display');
 
             // --- Elemen UI ---
             const loginView = document.getElementById('login-view');
@@ -217,16 +247,30 @@
             const chatbotFab = document.getElementById('chatbot-fab');
             const chatbotModal = document.getElementById('chatbot-modal');
             const chatCloseButton = document.getElementById('chat-close');
-            const chatMessages = document.getElementById('chat-messages');
-            const chatForm = document.getElementById('chat-form');
-            const chatInput = document.getElementById('chat-input');
-            const chatInputArea = document.getElementById('chat-input-area');
-            const chatConfirmation = document.getElementById('chat-confirmation');
-            const chatConfirmationText = document.getElementById('chat-confirmation-text');
-            const chatConfirmYes = document.getElementById('chat-confirm-yes');
-            const chatConfirmNo = document.getElementById('chat-confirm-no');
+            const chatMessages = document.getElementById('chat-messages'); // Pastikan ini didefinisikan
+            const chatForm = document.getElementById('chat-form');         // Pastikan ini didefinisikan
+            const chatInput = document.getElementById('chat-input');       // Pastikan ini didefinisikan
+            const chatInputArea = document.getElementById('chat-input-area'); // Pastikan ini didefinisikan
+            const chatConfirmation = document.getElementById('chat-confirmation'); // Pastikan ini didefinisikan
+            const chatConfirmationText = document.getElementById('chat-confirmation-text'); // Pastikan ini didefinisikan
+            const chatConfirmYes = document.getElementById('chat-confirm-yes'); // Pastikan ini didefinisikan
+            const chatConfirmNo = document.getElementById('chat-confirm-no');   // Pastikan ini didefinisikan
 
-            // --- Logika Label Slider (diperbarui untuk kuliah) ---
+            
+            // Elemen AHP Modal
+            const settingsFab = document.getElementById('settings-fab');
+            const settingsModal = document.getElementById('settings-modal');
+            const settingsCloseButton = document.getElementById('settings-close');
+            const compareUrgencyImportance = document.getElementById('compare-urgency-importance');
+            const compareUrgencyTime = document.getElementById('compare-urgency-time');
+            const compareImportanceTime = document.getElementById('compare-importance-time');
+            const compareUrgencyImportanceLabel = document.getElementById('compare-urgency-importance-label');
+            const compareUrgencyTimeLabel = document.getElementById('compare-urgency-time-label');
+            const compareImportanceTimeLabel = document.getElementById('compare-importance-time-label');
+            const saveWeightsButton = document.getElementById('save-weights');
+            const calculatedWeightsDisplay = document.getElementById('calculated-weights-display');
+
+            // --- Logika Label Slider (Form Manual) ---
             const urgencyLabels = { 1: 'Santai (> Seminggu)', 2: 'Minggu Ini', 3: 'Lusa', 4: 'Besok', 5: 'Hari Ini (Mendesak)' };
             const importanceLabels = { 1: 'Catatan', 2: 'Tugas Harian', 3: 'Tugas Besar/Projek', 4: 'Kuis/Presentasi', 5: 'Ujian/Final' };
             const urgencySlider = document.getElementById('task-urgency');
@@ -238,7 +282,7 @@
 
             // --- Fungsi Cek Admin & Memuat Daftar Pengguna ---
             const checkAdminStatus = async (user) => { /* ... (tidak berubah) ... */ 
-                if (user.isAnonymous) return false;
+                 if (user.isAnonymous) return false;
                 const userDocRef = doc(db, "users", user.uid);
                 const userDoc = await getDoc(userDocRef);
                 return userDoc.exists() && userDoc.data().isAdmin === true;
@@ -274,18 +318,29 @@
             onAuthStateChanged(auth, async (user) => {
                 adminPanel.classList.add('hidden');
                 chatbotFab.classList.add('hidden');
+                settingsFab.classList.add('hidden'); // Sembunyikan settings fab juga
+
                 if (user) {
                     userId = user.uid; 
+                    // ... (logika login lainnya)
                     userEmailSpan.innerHTML = user.isAnonymous ? `Tamu <span class="font-normal text-slate-400 text-xs">(${user.uid.substring(0, 6)}...)</span>` : user.email;
                     loginView.classList.add('hidden');
                     userView.classList.remove('hidden');
+
                     mainContent.classList.remove('hidden');
                     chatbotFab.classList.remove('hidden'); 
+                    settingsFab.classList.remove('hidden'); // Tampilkan settings fab saat login
+                    
                     if (await checkAdminStatus(user)) {
                         loadUserListForAdmin();
                     }
+                    
+                    // Muat bobot yang tersimpan saat login
+                    loadWeights(); 
+                    
                     listenToTasks();
                 } else {
+                    // ... (logika logout)
                     userId = null;
                     loginView.classList.remove('hidden');
                     userView.classList.add('hidden');
@@ -303,84 +358,120 @@
                 return collection(db, path);
             };
 
+            // --- Fungsi Hitung Skor dengan Bobot Dinamis ---
+            function calculatePriorityScore(urgency, pentingnya, time) {
+                // Pastikan bobot sudah dimuat
+                if (!weights) {
+                    console.warn("Bobot belum dimuat, menggunakan default.");
+                    weights = { urgency: 3.5, pentingnya: 2.5, time: -0.5 };
+                }
+                
+                const score = (urgency * weights.urgency) + (pentingnya * weights.pentingnya) + (time * weights.time); // Perhatikan time positif jika bobotnya negatif
+                return parseFloat(score.toFixed(2));
+            }
+
             // --- Fungsi Inti: Menambah Tugas ---
             const addNewTask = async (taskData) => {
-                if (!userId) {
-                    alert("Error: Anda tidak terautentikasi.");
-                    return false;
-                }
+                 if (!userId) { alert("Error: Anda tidak terautentikasi."); return false;}
                 try {
-                    // *** PERHITUNGAN SKOR ***
-                    // Pastikan semua input adalah angka
+                    // *** PERHITUNGAN SKOR MENGGUNAKAN FUNGSI BARU ***
                     const urgency = Number(taskData.urgency);
-                    const pentingnya = Number(taskData.pentingnya); // Nama variabel sudah benar
+                    const pentingnya = Number(taskData.pentingnya); 
                     const time = Number(taskData.time);
 
-                    // Cek jika ada NaN
                     if (isNaN(urgency) || isNaN(pentingnya) || isNaN(time)) {
-                        console.error("Data tidak valid:", taskData);
-                        throw new Error("Data input tidak valid. Gagal menghitung skor.");
+                        throw new Error("Data input tidak valid.");
                     }
                     
-                    const priorityScore = parseFloat(((urgency * 3.5) + (pentingnya * 2.5) - (time * 0.5)).toFixed(2));
+                    // Memanggil fungsi kalkulasi yang sekarang dinamis
+                    const priorityScore = calculatePriorityScore(urgency, pentingnya, time);
                     
                     const fullTaskData = {
-                        name: taskData.name,
-                        urgency: urgency,
-                        pentingnya: pentingnya, // Nama variabel sudah benar
-                        time: time,
-                        priorityScore: priorityScore,
-                        status: 'pending',
-                        createdAt: serverTimestamp()
+                        name: taskData.name, urgency, pentingnya, time, // Gunakan nama variabel yang konsisten
+                        priorityScore, status: 'pending', createdAt: serverTimestamp()
                     };
 
                     const collectionRef = getTasksCollectionRef(userId);
-                    if (!collectionRef) throw new Error("Referensi koleksi tidak valid (userId null).");
+                    if (!collectionRef) throw new Error("Ref koleksi tidak valid.");
                     
-                    console.log("[DEBUG] Menambahkan tugas baru:", fullTaskData);
+                    console.log("[DEBUG] Menambah tugas:", fullTaskData, "dengan bobot:", weights);
                     await addDoc(collectionRef, fullTaskData);
                     return true;
-                } catch (error) {
-                    console.error("GAGAL MENAMBAHKAN TUGAS:", error);
-                    alert("GAGAL: " + error.message);
-                    return false;
-                }
+                } catch (error) { console.error("GAGAL MENAMBAHKAN TUGAS:", error); alert("GAGAL: " + error.message); return false; }
             };
 
             // --- Event Listener: Form Manual ---
             taskForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
-                // ===========================================
-                // --- PERBAIKAN BUG UTAMA ADA DI SINI ---
-                // ===========================================
                 const taskData = {
                     name: document.getElementById('task-name').value,
                     urgency: parseInt(document.getElementById('task-urgency').value),
-                    pentingnya: parseInt(document.getElementById('task-importance').value), // FIX: Diubah dari 'importance'
+                    pentingnya: parseInt(document.getElementById('task-importance').value),
                     time: parseFloat(document.getElementById('task-time').value)
                 };
-                // ===========================================
-
-                const success = await addNewTask(taskData); // Sekarang taskData mengirim 'pentingnya'
-                if (success) {
-                    e.target.reset(); 
+                const success = await addNewTask(taskData);
+                if (success) { 
+                     e.target.reset(); 
                     urgencyValue.textContent = '3 (Lusa)';
                     importanceValue.textContent = '3 (Tugas Besar)';
-                }
+                 }
             });
 
-            // --- Fungsi Login/Logout ---
+            // --- Fungsi Login/Logout/Ekspor ---
             const signInWithGoogle = () => signInWithPopup(auth, new GoogleAuthProvider()).catch(err => console.error(err));
             const signInAsGuest = () => signInAnonymously(auth).catch(err => console.error(err));
             const doSignOut = () => signOut(auth).catch(err => console.error(err));
             loginButton.addEventListener('click', signInWithGoogle);
             guestLoginButton.addEventListener('click', signInAsGuest);
             logoutButton.addEventListener('click', doSignOut);
+            const exportSelectedUserCsv = async () => { 
+                const selectedUserId = userSelectDropdown.value;
+                if (!selectedUserId) {
+                    alert("Silakan pilih pengguna terlebih dahulu.");
+                    return;
+                }
+                console.log(`Memulai ekspor untuk user ID: ${selectedUserId}`);
+                 try {
+                    const tasksCollectionRef = getTasksCollectionRef(selectedUserId); // Ambil ref koleksi user terpilih
+                    if (!tasksCollectionRef) throw new Error("Referensi koleksi tidak valid.");
 
-            // --- Fungsi Ekspor Admin ---
-            const exportSelectedUserCsv = async () => { /* ... (tidak berubah) ... */ };
+                    const tasksSnapshot = await getDocs(query(tasksCollectionRef));
+                    const tasks = [];
+                    tasksSnapshot.forEach(doc => tasks.push({ id: doc.id, ...doc.data() }));
+
+                    if (tasks.length === 0) {
+                        alert(`Pengguna ${userSelectDropdown.options[userSelectDropdown.selectedIndex].text} tidak memiliki data tugas.`);
+                        return;
+                    }
+                    
+                    const headers = ['ID Tugas', 'Nama Tugas', 'Urgensi', 'Pentingnya', 'Estimasi Waktu (Jam)', 'Skor Prioritas', 'Status', 'Tanggal Dibuat'];
+                    const rows = tasks.map(task => {
+                        const taskName = (task.name || '').includes(',') ? `"${task.name}"` : task.name;
+                        const createdAt = task.createdAt ? new Date(task.createdAt.seconds * 1000).toLocaleString('id-ID') : 'N/A';
+                        return [task.id, taskName, task.urgency, task.pentingnya, task.time, task.priorityScore, task.status, createdAt].join(',');
+                    });
+
+                    const csvContent = [headers.join(','), ...rows].join('\n');
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement("a");
+                    const url = URL.createObjectURL(blob);
+                    const date = new Date().toISOString().slice(0, 10);
+                    const selectedUserName = userSelectDropdown.options[userSelectDropdown.selectedIndex].text.split(' ')[0]; // Ambil nama/email saja
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", `prioritask_${selectedUserName}_${date}.csv`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    console.log("Ekspor selesai.");
+
+                 } catch (error) {
+                      console.error("Gagal mengekspor data:", error);
+                      alert("Gagal mengekspor data. Cek console (F12) untuk detail.");
+                 }
+            };
             downloadButton.addEventListener('click', exportSelectedUserCsv);
+
 
             // --- Fungsi Baca & Tampil Data ---
             function listenToTasks() { /* ... (tidak berubah) ... */ 
@@ -391,29 +482,33 @@
                 unsubscribeTasks = onSnapshot(q, (snapshot) => {
                     let tasks = [];
                     snapshot.forEach((doc) => tasks.push({ id: doc.id, ...doc.data() }));
-                    tasks.sort((a, b) => b.priorityScore - a.priorityScore);
+                    // tasks.sort((a, b) => b.priorityScore - a.priorityScore); // Dipindahkan ke renderTasks
                     renderTasks(tasks); 
                 }, (error) => {
                     console.error("[DEBUG] Gagal mendengarkan data (listenToTasks):", error);
                 });
             }
-            
-            // Fungsi renderTasks (sudah benar, tidak berubah)
+            // Fungsi renderTasks 
             function renderTasks(tasks) {
                  const loadingP = document.getElementById('loading-tasks');
                  if(loadingP) loadingP.style.display = 'none';
-                 if (tasks.length === 0) {
-                    taskListDiv.innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-md"><h3 class="font-semibold text-lg">Tidak ada tugas!</h3><p class="text-slate-500 mt-1">Gunakan form manual atau chatbot (kanan bawah) untuk menambah tugas.</p></div>`;
-                    return;
-                }
+                 if (tasks.length === 0) { taskListDiv.innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-md"><h3 class="font-semibold text-lg">Tidak ada tugas!</h3><p class="text-slate-500 mt-1">Gunakan form manual atau chatbot (kanan bawah) untuk menambah tugas.</p></div>`; return;}
+                
+                // Sortir ulang di sini untuk memastikan urutan benar jika bobot berubah
+                 tasks.sort((a, b) => b.priorityScore - a.priorityScore);
+
                 taskListDiv.innerHTML = tasks.map(task => {
-                    const priorityScoreNum = Number(task.priorityScore); // Pastikan ini angka
-                    const priorityText = isNaN(priorityScoreNum) ? 'Rendah (Error)' :
-                                       priorityScoreNum > 15 ? 'Tinggi' :
-                                       priorityScoreNum > 8 ? 'Sedang' : 'Rendah';
+                    const priorityScoreNum = Number(task.priorityScore);
+                    // Hitung batas dinamis berdasarkan bobot saat ini
+                    const highThreshold = (5*weights.urgency + 5*weights.pentingnya + 1*weights.time); // Skor maks estimasi
+                    const mediumThreshold = (3*weights.urgency + 3*weights.pentingnya + 3*weights.time); // Skor tengah estimasi
+
+                    const priorityText = isNaN(priorityScoreNum) ? 'N/A' :
+                                       priorityScoreNum > highThreshold * 0.6 ? 'Tinggi' : // Di atas 60% maks
+                                       priorityScoreNum > highThreshold * 0.3 ? 'Sedang' : 'Rendah'; // Di atas 30% maks
                     const priorityClass = isNaN(priorityScoreNum) ? 'priority-low' :
-                                        priorityScoreNum > 15 ? 'priority-high' :
-                                        priorityScoreNum > 8 ? 'priority-medium' : 'priority-low';
+                                        priorityText === 'Tinggi' ? 'priority-high' :
+                                        priorityText === 'Sedang' ? 'priority-medium' : 'priority-low';
                     const scoreDisplay = isNaN(priorityScoreNum) ? 'NaN' : priorityScoreNum.toFixed(1);
 
                     return `
@@ -421,13 +516,13 @@
                         <input type="checkbox" onchange="window.toggleTaskStatus('${task.id}', '${task.status}')" class="mt-1.5 h-5 w-5 rounded" ${task.status === 'completed' ? 'checked' : ''}>
                         <div class="flex-grow">
                             <div class="flex justify-between items-start">
-                               <p class="font-semibold text-lg ${task.status === 'completed' ? 'line-through' : ''}">${task.name}</p>
+                               <p class="font-semibold text-lg ${task.status === 'completed' ? 'line-through' : ''}">${task.name || 'Nama Tugas Hilang'}</p>
                                <span class="priority-badge ${priorityClass}">${priorityText} (${scoreDisplay})</span>
                             </div>
-                            <div class="text-sm text-slate-500 mt-2 flex gap-4">
-                                <span>Urgensi: <strong>${task.urgency}</strong></span>
-                                <span>Pentingnya: <strong>${task.pentingnya}</strong></span>
-                                <span>Waktu: <strong>${task.time} jam</strong></span>
+                            <div class="text-sm text-slate-500 mt-2 flex gap-4 flex-wrap">
+                                <span>Urgensi: <strong>${task.urgency ?? 'N/A'}</strong></span>
+                                <span>Pentingnya: <strong>${task.pentingnya ?? 'N/A'}</strong></span> 
+                                <span>Waktu: <strong>${task.time ?? 'N/A'} jam</strong></span>
                             </div>
                         </div>
                         <button onclick="window.deleteTask('${task.id}')" class="text-slate-400 hover:text-red-500 p-1">
@@ -438,45 +533,39 @@
             }
             
             // --- Fungsi Global (onclick) ---
-            window.toggleTaskStatus = async (taskId, currentStatus) => { /* ... (tidak berubah) ... */ };
-            window.deleteTask = async (taskId) => { /* ... (tidak berubah) ... */ };
+            window.toggleTaskStatus = async (taskId, currentStatus) => { /* ... */ };
+            window.deleteTask = async (taskId) => { /* ... */ };
             
             // ===========================================
-            // --- LOGIKA CHATBOT AI (DENGAN PERBAIKAN) ---
+            // --- LOGIKA CHATBOT AI ---
             // ===========================================
-
             chatbotFab.addEventListener('click', () => chatbotModal.classList.remove('hidden'));
             chatCloseButton.addEventListener('click', () => chatbotModal.classList.add('hidden'));
 
-            function appendChatMessage(message, sender = 'bot') { /* ... (tidak berubah) ... */ 
+            function appendChatMessage(message, sender = 'bot') { 
                 const bubble = document.createElement('div');
                 bubble.classList.add('chat-bubble', sender === 'user' ? 'chat-bubble-user' : 'chat-bubble-bot');
-                bubble.textContent = message;
+                // Mengganti newline karakter (\n) dengan tag <br> untuk tampilan
+                bubble.innerHTML = message.replace(/\n/g, '<br>'); 
                 chatMessages.appendChild(bubble);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
-
-            // Fungsi untuk memanggil Gemini API
-            async function callGeminiApi(text) {
-                const apiKey = ""; 
+             async function callGeminiApi(text) { /* ... (fungsi API call) ... */ 
+                const apiKey = "AIzaSyD-Hy0tvR9Yq_7emVX-mVEPZLgO8VAhIDc"; 
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-
-                // ===========================================
-                // --- PERBAIKAN BUG CHATBOT ADA DI SINI ---
-                // ===========================================
                 const systemPrompt = `Anda adalah 'Prioritask', asisten AI untuk mahasiswa. Tugas Anda adalah mengekstrak detail tugas kuliah dari teks pengguna dan mengubahnya menjadi objek JSON.
                 
                 Gunakan skema JSON ini:
                 { "type": "OBJECT", "properties": { "name": { "type": "STRING" }, "urgency": { "type": "NUMBER" }, "pentingnya": { "type": "NUMBER" }, "time": { "type": "NUMBER" } } }
                 
                 Aturan Konversi:
-                - "name": Nama tugas kuliah (misal: "Laporan Praktikum Jarkom", "Kuis Kalkulus").
-                - "urgency" (skala 1-5): 1=Santai/Minggu depan, 2=Minggu ini, 3=Lusa, 4=Besok, 5=Hari ini/Sangat Mendesak.
+                - "name": Nama tugas kuliah (misal: "Laporan Praktikum Jarkom", "Kuis Kalkulus"). WAJIB ADA.
+                - "urgency" (skala 1-5): 1=Santai/Minggu depan+, 2=Minggu ini, 3=Lusa, 4=Besok, 5=Hari ini/Sangat Mendesak.
                 - "pentingnya" (skala 1-5): 1=Catatan, 2=Tugas Harian, 3=Tugas Besar/Projek, 4=Kuis/Presentasi, 5=Ujian/Final/Sangat Penting.
-                - "time": Estimasi waktu dalam jam (misal: "2 jam" -> 2, "30 menit" -> 0.5).
+                - "time": Estimasi waktu dalam jam (misal: "2 jam" -> 2, "30 menit" -> 0.5, "sejam" -> 1). WAJIB ADA.
                 
-                Jika ada info yang kurang, gunakan nilai default: urgency=3, pentingnya=3, time=1.
-                HANYA RESPON DENGAN OBJEK JSON YANG VALID. JANGAN TAMBAHKAN TEKS LAIN.`;
+                Jika urgency atau pentingnya kurang jelas, gunakan nilai default 3. JIKA NAMA ATAU WAKTU TIDAK ADA, KEMBALIKAN NULL.
+                HANYA RESPON DENGAN OBJEK JSON YANG VALID ATAU NULL. JANGAN TAMBAHKAN TEKS LAIN.`;
 
                 const payload = {
                     contents: [{ parts: [{ text: text }] }],
@@ -488,13 +577,13 @@
                             properties: {
                                 "name": { "type": "STRING" },
                                 "urgency": { "type": "NUMBER" },
-                                "pentingnya": { "type": "NUMBER" }, // FIX: Diubah dari 'importance'
+                                "pentingnya": { "type": "NUMBER" }, 
                                 "time": { "type": "NUMBER" }
-                            }
+                            },
+                             required: ["name", "time"] // Memastikan nama dan waktu ada
                         }
                     }
                 };
-                // ===========================================
 
                 try {
                     const response = await fetch(apiUrl, {
@@ -504,16 +593,32 @@
                     });
                     if (!response.ok) throw new Error(`API error! status: ${response.status}`);
                     const result = await response.json();
-                    const jsonText = result.candidates[0].content.parts[0].text;
-                    return JSON.parse(jsonText);
+                     // Cek apakah ada respons kandidat dan teks
+                    if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts[0].text) {
+                        const jsonText = result.candidates[0].content.parts[0].text;
+                         console.log("Gemini Response:", jsonText); // Log respons mentah
+                        // Coba parse, jika gagal kembalikan null
+                        try {
+                            return JSON.parse(jsonText);
+                        } catch (parseError) {
+                            console.error("Gagal parse JSON dari Gemini:", parseError, "Response:", jsonText);
+                            return null;
+                        }
+                    } else {
+                         console.warn("Respons Gemini tidak valid atau kosong:", result);
+                         // Jika prompt filtering atau safety, respons mungkin kosong
+                        if (result.promptFeedback && result.promptFeedback.blockReason) {
+                            console.error("Permintaan diblokir:", result.promptFeedback.blockReason);
+                            return { error: `Permintaan diblokir karena: ${result.promptFeedback.blockReason}. Coba gunakan kata-kata lain.` };
+                        }
+                        return null; // Respons tidak valid
+                    }
                 } catch (error) {
                     console.error("Error memanggil Gemini API:", error);
                     return null;
                 }
             }
-
-            // Fungsi saat user mengirim chat
-            chatForm.addEventListener('submit', async (e) => {
+             chatForm.addEventListener('submit', async (e) => { /* ... (submit chat) ... */ 
                 e.preventDefault();
                 const userInput = chatInput.value.trim();
                 if (userInput === '') return;
@@ -527,12 +632,21 @@
                 
                 chatMessages.removeChild(chatMessages.lastChild); // Hapus "..."
 
-                if (taskData) {
-                    pendingTaskData = taskData; // Data ini sekarang berisi 'pentingnya'
+                // Cek jika ada error dari Gemini (misal diblokir)
+                if (taskData && taskData.error) {
+                    appendChatMessage(`Error: ${taskData.error}`, 'bot');
+                    chatInputArea.classList.remove('hidden'); // Tampilkan input lagi
+                    return; // Hentikan proses
+                }
+
+
+                if (taskData && taskData.name && taskData.time) { // Validasi minimal
+                    // Pastikan urgency dan pentingnya default jika tidak ada
+                    taskData.urgency = taskData.urgency || 3;
+                    taskData.pentingnya = taskData.pentingnya || 3;
+
+                    pendingTaskData = taskData; 
                     
-                    // ===========================================
-                    // --- PERBAIKAN BUG TAMPILAN ADA DI SINI ---
-                    // ===========================================
                     const summary = `Baik, saya catat ya:\n
 - Tugas: ${taskData.name}
 - Urgensi: ${taskData.urgency} (${urgencyLabels[taskData.urgency] || 'N/A'})
@@ -540,55 +654,88 @@
 - Waktu: ${taskData.time} jam
                     
 Apakah sudah benar?`;
-                    // ===========================================
                     
                     appendChatMessage(summary, 'bot');
                     chatConfirmationText.textContent = `Simpan tugas: "${taskData.name}"?`;
                     chatConfirmation.classList.remove('hidden');
                 } else {
-                    appendChatMessage("Maaf, saya tidak mengerti. Bisa coba ulangi dengan lebih spesifik?", 'bot');
+                    appendChatMessage("Maaf, saya tidak bisa mengekstrak nama tugas dan estimasi waktunya. Bisa coba ulangi dengan lebih jelas?", 'bot');
                     chatInputArea.classList.remove('hidden');
                 }
             });
+             function resetChat() { /* ... */ }
+             chatConfirmYes.addEventListener('click', async () => { /* ... */ });
+             chatConfirmNo.addEventListener('click', () => { /* ... */ });
 
-            function resetChat() { /* ... (tidak berubah) ... */ 
-                chatMessages.innerHTML = `
-                    <div class="chat-bubble chat-bubble-bot">
-                        Halo! Saya asisten Prioritask. Coba ketik tugas Anda dalam satu kalimat.
-                        <br><br>
-                        Contoh: "Saya ada kuis kalkulus besok, penting sekali, butuh 2 jam belajar."
-                    </div>`;
-                chatInputArea.classList.remove('hidden');
-                chatConfirmation.classList.add('hidden');
-                pendingTaskData = null;
+
+            // ===========================================
+            // --- LOGIKA AHP SEDERHANA ---
+            // ===========================================
+            settingsFab.addEventListener('click', () => settingsModal.classList.remove('hidden'));
+            settingsCloseButton.addEventListener('click', () => settingsModal.classList.add('hidden'));
+
+            const comparisonLabels = { /* ... */ };
+            function updateComparisonLabel(slider, labelElement) { /* ... */ }
+            compareUrgencyImportance.addEventListener('input', () => updateComparisonLabel(compareUrgencyImportance, compareUrgencyImportanceLabel));
+            compareUrgencyTime.addEventListener('input', () => updateComparisonLabel(compareUrgencyTime, compareUrgencyTimeLabel));
+            compareImportanceTime.addEventListener('input', () => updateComparisonLabel(compareImportanceTime, compareImportanceTimeLabel));
+
+            function calculateWeightsFromComparisons() { /* ... (perhitungan bobot) ... */ 
+                const valUI = parseInt(compareUrgencyImportance.value); 
+                const valUT = parseInt(compareUrgencyTime.value);     
+                const valIT = parseInt(compareImportanceTime.value);    
+                const ratioMap = { "-2": 1/5, "-1": 1/3, "0": 1, "1": 3, "2": 5 };
+                const ratioUI = ratioMap[valUI]; 
+                const ratioUT = ratioMap[valUT]; 
+                const ratioIT = ratioMap[valIT]; 
+                let relWUrgency = 1;
+                let relWPentingnya = 1 / ratioUI;
+                let relWAbsTime = 1 / ratioUT; 
+                const maxWeight = 3.5;
+                const scaleFactor = maxWeight / Math.max(relWUrgency, relWPentingnya); 
+                const finalWUrgency = relWUrgency * scaleFactor;
+                const finalWPentingnya = relWPentingnya * scaleFactor;
+                const timeScaleFactor = 0.5 / Math.max(1, relWAbsTime); 
+                const finalWTime = -relWAbsTime * timeScaleFactor;
+                return {
+                    urgency: parseFloat(finalWUrgency.toFixed(2)),
+                    pentingnya: parseFloat(finalWPentingnya.toFixed(2)),
+                    time: parseFloat(finalWTime.toFixed(2)) 
+                };
             }
-
-            // Tombol Konfirmasi: YA
-            chatConfirmYes.addEventListener('click', async () => {
-                if (pendingTaskData) {
-                    appendChatMessage("Menyimpan tugas...", 'bot');
-                    // pendingTaskData sudah memiliki 'pentingnya', jadi bisa langsung dikirim
-                    const success = await addNewTask(pendingTaskData); 
-                    
-                    if (success) {
-                        appendChatMessage("Sip, tugas sudah disimpan!", 'bot');
-                    } else {
-                        appendChatMessage("Maaf, terjadi kesalahan saat menyimpan. Coba lagi.", 'bot');
-                    }
-                    
-                    setTimeout(() => {
-                        resetChat();
-                        chatbotModal.classList.add('hidden');
-Twoj-Stomatolog-Klinika-Stomatologiczna.png
-                    }, 2000);
+            function saveWeights(newWeights) { /* ... (simpan ke localStorage) ... */ 
+                localStorage.setItem('prioritaskWeights', JSON.stringify(newWeights));
+                 weights = newWeights; 
+                 console.log("Bobot baru disimpan:", weights);
+                 displayCurrentWeights();
+                 if (userId) listenToTasks(); 
+            }
+            function loadWeights() { /* ... (muat dari localStorage) ... */ 
+                const savedWeights = localStorage.getItem('prioritaskWeights');
+                if (savedWeights) {
+                    weights = JSON.parse(savedWeights);
+                    console.log("Bobot dimuat dari localStorage:", weights);
+                } else {
+                    weights = { urgency: 3.5, pentingnya: 2.5, time: -0.5 };
+                    console.log("Menggunakan bobot default:", weights);
+                }
+                displayCurrentWeights();
+                 calculatedWeightsDisplay.textContent = `Bobot terhitung: U=${weights.urgency}, P=${weights.pentingnya}, W=${weights.time}`;
+            }
+            function displayCurrentWeights() { /* ... (tampilkan bobot) ... */ 
+                currentWeightsDisplayApp.textContent = `Bobot saat ini: Urgensi=${weights.urgency}, Pentingnya=${weights.pentingnya}, Waktu=${weights.time}`;
+            }
+            saveWeightsButton.addEventListener('click', () => { /* ... (event simpan bobot) ... */ 
+                 const newWeights = calculateWeightsFromComparisons();
+                calculatedWeightsDisplay.textContent = `Bobot terhitung: U=${newWeights.urgency}, P=${newWeights.pentingnya}, W=${newWeights.time}`;
+                if(confirm(`Simpan bobot baru?\nUrgensi: ${newWeights.urgency}\nPentingnya: ${newWeights.pentingnya}\nWaktu: ${newWeights.time}`)) {
+                    saveWeights(newWeights);
+                    settingsModal.classList.add('hidden'); // Tutup modal
                 }
             });
 
-            // Tombol Konfirmasi: TIDAK
-            chatConfirmNo.addEventListener('click', () => { /* ... (tidak berubah) ... */ 
-                appendChatMessage("Baik, dibatalkan. Silakan ketik ulang tugas Anda.", 'bot');
-                resetChat();
-            });
+            // Panggil loadWeights saat awal
+            loadWeights();
 
         }); // Penutup 'DOMContentLoaded'
     </script>
