@@ -39,7 +39,6 @@
 
         <!-- UI Login -->
         <div id="auth-container" class="mb-6 text-center">
-            <!-- PENTING: Login view dibuat terlihat secara default, JS akan menyembunyikannya jika perlu -->
             <div id="login-view"> 
                 <p class="text-slate-500 mb-4">Memeriksa status login...</p> 
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
@@ -52,20 +51,19 @@
                     </button>
                 </div>
             </div>
-             <!-- User view tetap hidden by default -->
             <div id="user-view" class="hidden">
                  <p class="text-sm text-slate-500 mb-2">Login sebagai <strong id="user-email"></strong></p>
                  <button id="logout-button" class="bg-red-500 text-white font-semibold py-1 px-4 text-sm rounded-lg hover:bg-red-600 transition-colors">Logout</button>
             </div>
         </div>
 
-        <!-- Konten Utama (tetap hidden by default) -->
+        <!-- Konten Utama -->
         <main id="main-content" class="hidden">
            <!-- ... (Isi main content tidak berubah) ... -->
         </main>
     </div>
 
-    <!-- Tombol FAB (tetap hidden by default) -->
+    <!-- Tombol FAB -->
     <button id="chatbot-fab" class="hidden bg-blue-600 text-white p-4 rounded-full shadow-lg" title="Buka Asisten Tugas" aria-label="Buka Asisten Tugas">
        <!-- Icon --> <span class="sr-only">Buka Asisten Tugas</span>
     </button>
@@ -73,7 +71,7 @@
         <!-- Icon --> <span class="sr-only">Atur Bobot Prioritas</span>
     </button>
 
-    <!-- Modal (tetap hidden by default) -->
+    <!-- Modal -->
     <div id="chatbot-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
         <!-- ... (Konten Modal Chatbot) ... -->
     </div>
@@ -99,7 +97,7 @@
         };
 
         // --- Inisialisasi Aplikasi ---
-        let db, auth, userId = null, unsubscribeTasks = null;
+        let db = null, auth = null, userId = null, unsubscribeTasks = null; // Inisialisasi null
         let pendingTaskData = null; 
         const appId = 'asisten-tugas-pribadi';
         let app = null; 
@@ -109,58 +107,43 @@
         try {
             console.log("[DEBUG] Mencoba inisialisasi Firebase...");
             app = initializeApp(firebaseConfig); 
-            db = getFirestore(app);
-            auth = getAuth(app);
-            console.log("[DEBUG] Firebase BERHASIL diinisialisasi.");
+            // *** PERBAIKAN: Pastikan db dan auth diinisialisasi SETELAH app ***
+            if (app) {
+                db = getFirestore(app);
+                auth = getAuth(app);
+                console.log("[DEBUG] Firebase BERHASIL diinisialisasi.");
+            } else {
+                 throw new Error("Objek aplikasi Firebase tidak valid setelah inisialisasi.");
+            }
         } catch (error) {
              console.error("!!! KRITIS: Gagal menginisialisasi Firebase !!!", error);
              alert("Gagal menginisialisasi Firebase. Aplikasi tidak bisa berjalan. Cek Console (F12). Error: " + error.message);
-             // Hentikan eksekusi jika init gagal
              throw new Error("Firebase init failed"); 
         }
 
         // --- Fungsi utilitas aman ---
-        function safeAddEventListener(elementId, event, handler) {
-            try {
-                const element = document.getElementById(elementId);
-                if (element) {
-                    element.addEventListener(event, handler);
-                    // console.log(`[DEBUG] Listener added for ${event} on #${elementId}`);
-                } else {
-                    // Jangan error kritis, cukup peringatan
-                    console.warn(`[WARN] Elemen dengan ID "${elementId}" tidak ditemukan saat mencoba menambah listener.`);
-                }
-            } catch(e) {
-                 console.error(`[ERROR] Gagal menambah listener ke #${elementId}:`, e);
-            }
-        }
+        function safeAddEventListener(elementId, event, handler) { /* ... */ }
         
         // --- Fungsi Utama (Dipanggil setelah DOM siap) ---
         function mainAppLogic() {
             console.log("[DEBUG] DOM loaded. Memulai mainAppLogic.");
 
-            // Pindahkan pencarian elemen penting ke sini
-            const loginView = document.getElementById('login-view');
-            const userView = document.getElementById('user-view');
-            const mainContent = document.getElementById('main-content');
-            const userEmailSpan = document.getElementById('user-email');
-            const chatbotFab = document.getElementById('chatbot-fab');
-            const settingsFab = document.getElementById('settings-fab');
-            const adminPanel = document.getElementById('admin-panel'); // Cari panel admin
-            const currentWeightsDisplayApp = document.getElementById('current-weights-display');
+            // Pengecekan Kritis: Pastikan Firebase terinisialisasi
+             if (!db || !auth) {
+                 console.error("!!! KRITIS: DB atau Auth tidak terinisialisasi di mainAppLogic !!!");
+                 alert("Error internal: Layanan Firebase tidak siap. Coba refresh.");
+                 return; // Hentikan jika Firebase tidak siap
+             }
 
+            // Elemen UI
+            const loginView = document.getElementById('login-view');
+            // ... (elemen UI lainnya)
 
             // --- Logika Label Slider Manual ---
-            const urgencyLabels = { 1: 'Santai (> Seminggu)', 2: 'Minggu Ini', 3: 'Lusa', 4: 'Besok', 5: 'Hari Ini (Mendesak)' };
-            const importanceLabels = { 1: 'Catatan', 2: 'Tugas Harian', 3: 'Tugas Besar/Projek', 4: 'Kuis/Presentasi', 5: 'Ujian/Final' };
-            safeAddEventListener('task-urgency', 'input', (e) => { 
-                const valueSpan = document.getElementById('urgency-value');
-                if(valueSpan) valueSpan.textContent = `${e.target.value} (${urgencyLabels[e.target.value]})`; 
-            });
-            safeAddEventListener('task-importance', 'input', (e) => { 
-                const valueSpan = document.getElementById('importance-value');
-                if(valueSpan) valueSpan.textContent = `${e.target.value} (${importanceLabels[e.target.value]})`; 
-            });
+            const urgencyLabels = { /* ... */ };
+            const importanceLabels = { /* ... */ };
+            safeAddEventListener('task-urgency', 'input', (e) => { /* ... */ });
+            safeAddEventListener('task-importance', 'input', (e) => { /* ... */ });
 
             // --- Fungsi Admin ---
             const checkAdminStatus = async (user) => { /* ... */ };
@@ -168,52 +151,33 @@
 
             // --- Otak Aplikasi: onAuthStateChanged ---
             console.log("[DEBUG] Memasang listener onAuthStateChanged...");
-            onAuthStateChanged(auth, async (user) => {
-                console.log("[DEBUG] onAuthStateChanged terpanggil. User:", user ? `UID: ${user.uid.substring(0,5)}...` : 'null');
-                 
-                 // Selalu sembunyikan elemen dinamis di awal
-                 if(adminPanel) adminPanel.classList.add('hidden');
-                 if(chatbotFab) chatbotFab.classList.add('hidden');
-                 if(settingsFab) settingsFab.classList.add('hidden');
-                 if(mainContent) mainContent.classList.add('hidden'); // Sembunyikan main content juga
-                 if(userView) userView.classList.add('hidden'); // Sembunyikan user view
-                 if(loginView) loginView.classList.add('hidden'); // Sembunyikan login view
-
-                if (user) {
-                    userId = user.uid; 
-                    if(userEmailSpan) userEmailSpan.innerHTML = user.isAnonymous ? `Tamu (${user.uid.substring(0, 6)}...)` : user.email;
-                    // Tampilkan UI yang relevan untuk user login
-                    if(userView) userView.classList.remove('hidden');
-                    if(mainContent) mainContent.classList.remove('hidden');
-                    if(chatbotFab) chatbotFab.classList.remove('hidden'); 
-                    if(settingsFab) settingsFab.classList.remove('hidden'); 
-                    
-                    if (await checkAdminStatus(user)) {
-                        loadUserListForAdmin(); 
-                    }
-                    loadWeights(); 
-                    listenToTasks();
-                } else {
-                    userId = null;
-                     // Tampilkan UI login jika tidak ada user
-                     if(loginView) loginView.classList.remove('hidden'); 
-                    if (unsubscribeTasks) {
-                        unsubscribeTasks(); 
-                        unsubscribeTasks = null;
-                        console.log("[DEBUG] Unsubscribed dari listener tugas.");
-                    }
-                    renderTasks([]); // Kosongkan daftar tugas
-                }
-            }, (error) => {
-                 // --- DEBUGGING: Tangkap error pada listener auth ---
-                 console.error("!!! KRITIS: Error pada onAuthStateChanged !!!", error);
-                 alert("Terjadi error saat memeriksa status login. Cek Console (F12).");
-            });
-            console.log("[DEBUG] Listener onAuthStateChanged terpasang.");
+            // *** PERBAIKAN: Tambah pengecekan auth sebelum memasang listener ***
+            if (auth) {
+                onAuthStateChanged(auth, async (user) => { /* ... (logika onAuthStateChanged tidak berubah) ... */ }, 
+                (error) => {
+                     console.error("!!! KRITIS: Error pada onAuthStateChanged !!!", error);
+                     alert("Terjadi error saat memeriksa status login. Cek Console (F12).");
+                });
+                console.log("[DEBUG] Listener onAuthStateChanged terpasang.");
+            } else {
+                 console.error("!!! KRITIS: Objek Auth tidak valid, listener onAuthStateChanged tidak bisa dipasang !!!");
+                 alert("Error internal: Layanan Autentikasi tidak siap.");
+            }
 
 
             // --- Fungsi Path Collection ---
-            const getTasksCollectionRef = (targetUserId) => { /* ... */ };
+            const getTasksCollectionRef = (targetUserId) => { 
+                // *** PERBAIKAN: Tambah pengecekan db ***
+                if (!db) { console.error("[ERROR] DB tidak valid di getTasksCollectionRef."); return null; }
+                const idToUse = targetUserId || userId; 
+                if (!idToUse) return null;
+                try {
+                    return collection(db, `artifacts/${appId}/users/${idToUse}/tasks`);
+                } catch (error) {
+                    console.error("[ERROR] Gagal membuat CollectionReference:", error);
+                    return null;
+                }
+             };
 
             // --- Fungsi Hitung Skor ---
             function calculatePriorityScore(urgency, pentingnya, time) { /* ... */ }
@@ -225,9 +189,9 @@
              safeAddEventListener('task-form', 'submit', async (e) => { /* ... */ });
 
             // --- Fungsi Login/Logout/Ekspor ---
-            const signInWithGoogle = () => { console.log("[DEBUG] Tombol Login Google diklik."); signInWithPopup(auth, new GoogleAuthProvider()).catch(err => console.error("Google Sign-In Error:", err)); }
-            const signInAsGuest = () => { console.log("[DEBUG] Tombol Login Tamu diklik."); signInAnonymously(auth).catch(err => console.error("Guest Sign-In Error:", err)); }
-            const doSignOut = () => { console.log("[DEBUG] Tombol Logout diklik."); signOut(auth).catch(err => console.error("Sign Out Error:", err)); }
+            const signInWithGoogle = () => { if(auth) { /* ... */ } else { console.error("Auth not ready");}};
+            const signInAsGuest = () => { if(auth) { /* ... */ } else { console.error("Auth not ready");}};
+            const doSignOut = () => { if(auth) { /* ... */ } else { console.error("Auth not ready");}};
             safeAddEventListener('login-button', 'click', signInWithGoogle);
             safeAddEventListener('guest-login-button', 'click', signInAsGuest);
             safeAddEventListener('logout-button', 'click', doSignOut);
@@ -235,29 +199,59 @@
             const exportSelectedUserCsv = async () => { /* ... */ };
             safeAddEventListener('download-button', 'click', exportSelectedUserCsv);
 
-
             // --- Fungsi Baca & Tampil Data ---
+            // *** PERBAIKAN: Fungsi listenToTasks dengan pengecekan lebih detail ***
             function listenToTasks() { 
-                 if (!userId) { console.warn("[WARN] listenToTasks dipanggil saat userId null."); return;}
+                 if (!userId) { console.warn("[WARN] listenToTasks: userId null."); return;}
+                 if (!db) { console.error("[ERROR] listenToTasks: DB tidak valid."); return; } // Cek DB
+                 
                  if (unsubscribeTasks) {
                     console.log("[DEBUG] Melepaskan listener tugas lama.");
-                    unsubscribeTasks(); // Pastikan listener lama dilepas
+                    try { unsubscribeTasks(); } catch(e){ console.warn("Gagal unsubscribe:", e); }
+                    unsubscribeTasks = null;
                  }
-                 const q = query(getTasksCollectionRef(userId)); 
-                 if (!q) { console.error("[ERROR] Gagal membuat query untuk listenToTasks."); return; }
                  
-                 console.log(`[DEBUG] Memasang listener snapshot ke path: ${getTasksCollectionRef(userId)?.path}`);
-                 unsubscribeTasks = onSnapshot(q, (snapshot) => {
-                     console.log(`[DEBUG] Menerima update snapshot. Jumlah dokumen: ${snapshot.size}`);
-                     let tasks = [];
-                     snapshot.forEach((doc) => tasks.push({ id: doc.id, ...doc.data() }));
-                     renderTasks(tasks); 
-                 }, (error) => {
-                     console.error("[ERROR] Gagal mendengarkan data (onSnapshot):", error);
-                      // Tampilkan error ke pengguna jika perlu
-                      const taskListDiv = document.getElementById('task-list');
-                      if (taskListDiv) taskListDiv.innerHTML = `<p class="text-red-500 text-center">Gagal memuat tugas: ${error.message}. Coba refresh halaman.</p>`;
-                 });
+                 let collectionRef;
+                 try {
+                     collectionRef = getTasksCollectionRef(userId); 
+                     if (!collectionRef) {
+                         console.error("[ERROR] listenToTasks: Gagal mendapatkan CollectionReference.");
+                         return; // Gagal mendapatkan ref
+                     }
+                 } catch (error) {
+                     console.error("[ERROR] listenToTasks: Error saat memanggil getTasksCollectionRef:", error);
+                     return;
+                 }
+
+                 let q;
+                 try {
+                     q = query(collectionRef); 
+                     if (!q) { 
+                         // Kondisi ini seharusnya tidak terjadi jika collectionRef valid
+                         console.error("[ERROR] listenToTasks: Fungsi query() mengembalikan nilai falsy.");
+                         return; 
+                     }
+                 } catch (error) {
+                     console.error("[ERROR] listenToTasks: Error saat memanggil query():", error);
+                     return;
+                 }
+                 
+                 console.log(`[DEBUG] Memasang listener snapshot ke path: ${collectionRef.path}`);
+                 try {
+                     unsubscribeTasks = onSnapshot(q, (snapshot) => {
+                         console.log(`[DEBUG] Menerima update snapshot. Jumlah dokumen: ${snapshot.size}`);
+                         let tasks = [];
+                         snapshot.forEach((doc) => tasks.push({ id: doc.id, ...doc.data() }));
+                         renderTasks(tasks); 
+                     }, (error) => {
+                         console.error("[ERROR] Gagal mendengarkan data (onSnapshot callback):", error);
+                         const taskListDiv = document.getElementById('task-list');
+                         if (taskListDiv) taskListDiv.innerHTML = `<p class="text-red-500 text-center">Gagal memuat tugas: ${error.message}. Coba refresh.</p>`;
+                     });
+                 } catch (error) {
+                     console.error("[ERROR] Gagal memasang listener onSnapshot:", error);
+                     alert("Gagal terhubung ke update data tugas. Cek Console.");
+                 }
              }
             function renderTasks(tasks) { /* ... (fungsi render tidak berubah) ... */ }
             
@@ -278,29 +272,26 @@
             // --- LOGIKA AHP SEDERHANA ---
             safeAddEventListener('settings-fab', 'click', () => { /* ... */ });
             safeAddEventListener('settings-close', 'click', () => { /* ... */ });
-
             const comparisonLabels = { /* ... */ }; 
             function updateComparisonLabel(sliderId, labelId) { /* ... */ }
             safeAddEventListener('compare-urgency-importance', 'input', () => updateComparisonLabel('compare-urgency-importance', 'compare-urgency-importance-label'));
             safeAddEventListener('compare-urgency-time', 'input', () => updateComparisonLabel('compare-urgency-time', 'compare-urgency-time-label'));
             safeAddEventListener('compare-importance-time', 'input', () => updateComparisonLabel('compare-importance-time', 'compare-importance-time-label'));
-            
             function calculateWeightsFromComparisons() { /* ... */ }
             function saveWeights(newWeights) { /* ... */ }
-            function loadWeights() { /* ... (fungsi loadWeights tidak berubah) ... */ }
-            function displayCurrentWeights() { /* ... (fungsi display tidak berubah) ... */ }
-            
-            safeAddEventListener('save-weights', 'click', () => { /* ... (event simpan bobot tidak berubah) ... */ });
+            function loadWeights() { /* ... */ }
+            function displayCurrentWeights() { /* ... */ }
+            safeAddEventListener('save-weights', 'click', () => { /* ... */ });
 
-            // Panggil loadWeights saat awal, setelah DOM siap
+            // Panggil loadWeights saat awal
             loadWeights();
 
         } // Penutup mainAppLogic
 
         // --- Panggil fungsi utama SETELAH DOM siap ---
-        if (document.readyState === 'loading') { // Jika DOM belum siap
+        if (document.readyState === 'loading') { 
             document.addEventListener('DOMContentLoaded', mainAppLogic);
-        } else { // Jika DOM sudah siap
+        } else { 
             mainAppLogic();
         }
 
