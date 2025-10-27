@@ -59,14 +59,26 @@
             </div>
             
             <div>
-                <!-- Daftar Tugas & Tombol Download -->
+                <!-- Daftar Tugas & Panel Admin -->
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-semibold">Daftar Tugas Anda (Diurutkan)</h2>
-                    <button id="download-button" class="hidden bg-green-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        Download Data (Admin)
-                    </button>
                 </div>
+
+                <!-- BARU: Panel Admin untuk Download -->
+                <div id="admin-panel" class="hidden bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
+                    <h3 class="text-lg font-semibold text-yellow-900">Panel Admin</h3>
+                    <p class="text-sm text-yellow-700 mb-3">Pilih pengguna untuk mengunduh data tugas mereka.</p>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <select id="user-select-dropdown" class="flex-grow px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Memuat daftar pengguna...</option>
+                        </select>
+                        <button id="download-button" class="bg-green-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Download Data
+                        </button>
+                    </div>
+                </div>
+
                 <div id="task-list" class="space-y-4">
                     <p id="loading-tasks" class="text-slate-500 text-center">Memuat tugas...</p>
                 </div>
@@ -110,9 +122,49 @@
             const loginButton = document.getElementById('login-button');
             const logoutButton = document.getElementById('logout-button');
             const guestLoginButton = document.getElementById('guest-login-button');
-            const downloadButton = document.getElementById('download-button');
             const taskForm = document.getElementById('task-form');
             const taskListDiv = document.getElementById('task-list');
+
+            // BARU: Elemen Panel Admin
+            const adminPanel = document.getElementById('admin-panel');
+            const userSelectDropdown = document.getElementById('user-select-dropdown');
+            const downloadButton = document.getElementById('download-button');
+
+            // --- BARU: Fungsi untuk memuat daftar pengguna (hanya admin) ---
+            const loadUserListForAdmin = async () => {
+                console.log("[DEBUG] Memuat daftar pengguna untuk admin...");
+                try {
+                    const usersCollectionRef = collection(db, "users");
+                    const snapshot = await getDocs(usersCollectionRef);
+                    
+                    userSelectDropdown.innerHTML = ''; // Kosongkan opsi 'loading'
+                    
+                    if (snapshot.empty) {
+                        userSelectDropdown.innerHTML = '<option value="">Tidak ada pengguna ditemukan</option>';
+                        return;
+                    }
+
+                    snapshot.forEach(doc => {
+                        const userData = doc.data();
+                        const userId = doc.id;
+                        // Tampilkan email jika ada, jika tidak tampilkan ID Tamu
+                        const userName = userData.email || `Tamu (${userId.substring(0, 8)}...)`;
+                        
+                        const option = document.createElement('option');
+                        option.value = userId;
+                        option.textContent = userName;
+                        userSelectDropdown.appendChild(option);
+                    });
+                    
+                    adminPanel.classList.remove('hidden'); // Tampilkan panel admin
+                    
+                } catch (error) {
+                    console.error("[DEBUG] Gagal memuat daftar pengguna:", error);
+                    // Ini kemungkinan besar error 'insufficient permissions' jika Rules salah
+                    adminPanel.innerHTML = `<p class="text-red-600">Gagal memuat daftar pengguna. Pastikan Security Rules sudah benar.</p>`;
+                    adminPanel.classList.remove('hidden');
+                }
+            };
 
             // --- Fungsi Cek Admin ---
             const checkAdminStatus = async (user) => {
@@ -124,16 +176,20 @@
 
             // --- Otak Aplikasi: onAuthStateChanged ---
             onAuthStateChanged(auth, async (user) => {
-                downloadButton.classList.add('hidden');
+                adminPanel.classList.add('hidden'); // Sembunyikan panel admin secara default
                 if (user) {
                     userId = user.uid; 
                     userEmailSpan.innerHTML = user.isAnonymous ? `Tamu <span class="font-normal text-slate-400 text-xs">(${user.uid.substring(0, 6)}...)</span>` : user.email;
                     loginView.classList.add('hidden');
                     userView.classList.remove('hidden');
                     mainContent.classList.remove('hidden');
+                    
+                    // BARU: Cek admin dan muat daftar pengguna
                     if (await checkAdminStatus(user)) {
-                        downloadButton.classList.remove('hidden');
+                        console.log("[DEBUG] Status Admin Dikonfirmasi.");
+                        loadUserListForAdmin(); // Panggil fungsi untuk mengisi dropdown
                     }
+                    
                     listenToTasks();
                 } else {
                     userId = null;
@@ -146,15 +202,22 @@
             });
 
             // --- Fungsi Path Collection ---
-            const getTasksCollectionRef = () => {
-                if (!userId) return null;
-                const path = `artifacts/${appId}/users/${userId}/tasks`;
+            const getTasksCollectionRef = (targetUserId) => {
+                // Gunakan targetUserId jika disediakan (untuk admin), jika tidak, gunakan userId yang sedang login
+                const idToUse = targetUserId || userId; 
+                if (!idToUse) {
+                    console.error("[DEBUG] GAGAL: getTasksCollectionRef dipanggil tetapi ID pengguna adalah null!");
+                    return null;
+                }
+                const path = `artifacts/${appId}/users/${idToUse}/tasks`;
+                console.log(`[DEBUG] Menggunakan path collection: ${path}`);
                 return collection(db, path);
             }
 
             // --- Fungsi Submit Form ---
             taskForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                // ... (Logika submit tidak berubah, sudah benar) ...
                 if (!userId) {
                     alert("Error: Anda tidak terautentikasi.");
                     return;
@@ -173,7 +236,7 @@
                     createdAt: serverTimestamp()
                 };
                 try {
-                    const collectionRef = getTasksCollectionRef();
+                    const collectionRef = getTasksCollectionRef(userId); // Selalu tambah ke data milik sendiri
                     if (!collectionRef) throw new Error("Referensi koleksi tidak valid (userId null).");
                     await addDoc(collectionRef, taskData);
                     e.target.reset();
@@ -193,29 +256,78 @@
             guestLoginButton.addEventListener('click', signInAsGuest);
             logoutButton.addEventListener('click', doSignOut);
 
-            // --- Fungsi Ekspor ---
-            const exportAllDataToCsv = async () => { /* ... (fungsi ekspor, tidak berubah) ... */ };
-            downloadButton.addEventListener('click', exportAllDataToCsv);
+            // --- BARU: Fungsi Ekspor CSV untuk Pengguna Tertentu ---
+            const exportSelectedUserCsv = async () => {
+                const selectedUserId = userSelectDropdown.value;
+                const selectedUserName = userSelectDropdown.options[userSelectDropdown.selectedIndex].text;
+
+                if (!selectedUserId) {
+                    alert("Silakan pilih seorang pengguna dari daftar.");
+                    return;
+                }
+
+                console.log(`[DEBUG] Memulai ekspor untuk pengguna: ${selectedUserName} (${selectedUserId})`);
+
+                try {
+                    // 1. Ambil data tugas HANYA untuk pengguna yang dipilih
+                    const tasksCollectionRef = getTasksCollectionRef(selectedUserId);
+                    const tasksSnapshot = await getDocs(query(tasksCollectionRef));
+                    
+                    const tasks = [];
+                    tasksSnapshot.forEach(doc => tasks.push({ id: doc.id, ...doc.data() }));
+
+                    if (tasks.length === 0) {
+                        alert(`Pengguna "${selectedUserName}" tidak memiliki data tugas untuk diunduh.`);
+                        return;
+                    }
+
+                    // 2. Siapkan header dan baris data
+                    const headers = ['ID Tugas', 'Nama Tugas', 'Urgensi', 'Pentingnya', 'Estimasi Waktu (Jam)', 'Skor Prioritas', 'Status', 'Tanggal Dibuat'];
+                    const rows = tasks.map(task => {
+                        const taskName = (task.name || '').includes(',') ? `"${task.name}"` : task.name;
+                        const createdAt = task.createdAt ? new Date(task.createdAt.seconds * 1000).toLocaleString('id-ID') : 'N/A';
+                        return [task.id, taskName, task.urgency, task.importance, task.time, task.priorityScore, task.status, createdAt].join(',');
+                    });
+
+                    // 3. Gabungkan dan picu unduhan
+                    const csvContent = [headers.join(','), ...rows].join('\n');
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement("a");
+                    const url = URL.createObjectURL(blob);
+                    const date = new Date().toISOString().slice(0, 10);
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", `prioritask_data_${selectedUserName}_${date}.csv`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    console.log("[DEBUG] Ekspor selesai.");
+
+                } catch (error) {
+                    console.error("[DEBUG] Gagal mengunduh data:", error);
+                    alert("Gagal mengunduh data. Pastikan Security Rules Anda mengizinkan admin membaca data pengguna lain.");
+                }
+            };
+            downloadButton.addEventListener('click', exportSelectedUserCsv);
 
             // --- Fungsi Baca & Tampil Data ---
             function listenToTasks() {
                 if (!userId) return;
                 if (unsubscribeTasks) unsubscribeTasks();
-                const q = query(getTasksCollectionRef());
+                // Selalu tampilkan tugas milik pengguna yang sedang login
+                const q = query(getTasksCollectionRef(userId)); 
                 if (!q) return;
                 unsubscribeTasks = onSnapshot(q, (snapshot) => {
                     let tasks = [];
                     snapshot.forEach((doc) => tasks.push({ id: doc.id, ...doc.data() }));
                     tasks.sort((a, b) => b.priorityScore - a.priorityScore);
-                    renderTasks(tasks); // Panggil renderTasks dengan data yang sudah di-sortir
+                    renderTasks(tasks); 
                 }, (error) => {
                     console.error("[DEBUG] Gagal mendengarkan data (listenToTasks):", error);
                 });
             }
             
-            // ==========================================================
-            // INI ADALAH FUNGSI YANG DIPERBAIKI
-            // ==========================================================
+            // Fungsi renderTasks tidak berubah
             function renderTasks(tasks) {
                  const loadingP = document.getElementById('loading-tasks');
                  if(loadingP) loadingP.style.display = 'none';
@@ -225,12 +337,10 @@
                     return;
                 }
                 
-                // Menggunakan .map untuk mengubah setiap data tugas menjadi string HTML
                 taskListDiv.innerHTML = tasks.map(task => {
                     const priorityClass = task.priorityScore > 15 ? 'priority-high' : (task.priorityScore > 8 ? 'priority-medium' : 'low');
                     const priorityText = task.priorityScore > 15 ? 'Tinggi' : (task.priorityScore > 8 ? 'Sedang' : 'Rendah');
                     
-                    // Ini adalah template HTML lengkap untuk satu kartu tugas
                     return `
                     <div class="task-card bg-white p-4 rounded-xl shadow-md flex items-start gap-4 ${task.status === 'completed' ? 'opacity-60' : ''}">
                         <input type="checkbox" onchange="window.toggleTaskStatus('${task.id}', '${task.status}')" class="mt-1.5 h-5 w-5 rounded" ${task.status === 'completed' ? 'checked' : ''}>
@@ -241,8 +351,8 @@
                                <span class="priority-badge ${priorityClass}">${priorityText} (${task.priorityScore.toFixed(1)})</span>
                             </div>
                             <div class="text-sm text-slate-500 mt-2 flex gap-4">
-                                <span>Urgensi: <strong>${task.urgensi}</strong></span>
-                                <span>Pentingnya: <strong>${task.pentingnya}</strong></span>
+                                <span>Urgensi: <strong>${task.urgency}</strong></span>
+                                <span>Pentingnya: <strong>${task.importance}</strong></span>
                                 <span>Waktu: <strong>${task.time} jam</strong></span>
                             </div>
                         </div>
@@ -251,7 +361,7 @@
                             <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
                         </button>
                     </div>`;
-                }).join(''); // .join('') menggabungkan semua string HTML menjadi satu
+                }).join('');
             }
             
             // --- Slider & Fungsi Global ---
@@ -264,8 +374,6 @@
             urgencySlider.addEventListener('input', () => { urgencyValue.textContent = `${urgencySlider.value} (${urgencyLabels[urgencySlider.value]})`; });
             importanceSlider.addEventListener('input', () => { importanceValue.textContent = `${importanceSlider.value} (${importanceLabels[importanceSlider.value]})`; });
 
-            // Menjadikan fungsi global agar bisa dipanggil dari onclick
-            // PERBAIKAN: Menambahkan 'window.' agar fungsi bisa diakses dari HTML
             window.toggleTaskStatus = async (taskId, currentStatus) => {
                 if (!userId) return;
                 const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
