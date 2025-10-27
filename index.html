@@ -40,8 +40,8 @@
         <!-- UI Login -->
         <div id="auth-container" class="mb-6 text-center">
             <div id="login-view"> 
-                <p class="text-slate-500 mb-4">Memeriksa status login...</p> 
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <p id="login-status" class="text-slate-500 mb-4">Memeriksa status login...</p> 
+                <div id="login-buttons-container" class="hidden flex flex-col sm:flex-row gap-4 justify-center"> <!-- Buttons hidden initially -->
                     <button id="login-button" class="bg-white text-slate-700 font-semibold py-2 px-6 border border-slate-300 rounded-lg shadow-sm hover:bg-slate-100 transition-colors flex items-center justify-center w-full sm:w-auto">
                         <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48" width="48px" height="48px"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.902,36.632,44,30.852,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path></svg>
                         Login dengan Google
@@ -97,7 +97,7 @@
         };
 
         // --- Inisialisasi Aplikasi ---
-        let db = null, auth = null, userId = null, unsubscribeTasks = null; // Inisialisasi null
+        let db = null, auth = null, userId = null, unsubscribeTasks = null; 
         let pendingTaskData = null; 
         const appId = 'asisten-tugas-pribadi';
         let app = null; 
@@ -107,7 +107,6 @@
         try {
             console.log("[DEBUG] Mencoba inisialisasi Firebase...");
             app = initializeApp(firebaseConfig); 
-            // *** PERBAIKAN: Pastikan db dan auth diinisialisasi SETELAH app ***
             if (app) {
                 db = getFirestore(app);
                 auth = getAuth(app);
@@ -122,22 +121,41 @@
         }
 
         // --- Fungsi utilitas aman ---
-        function safeAddEventListener(elementId, event, handler) { /* ... */ }
+        function safeAddEventListener(elementId, event, handler) {
+             try {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.addEventListener(event, handler);
+                    console.log(`[DEBUG] Listener added for ${event} on #${elementId}`); // Log sukses
+                } else {
+                    console.warn(`[WARN] Elemen dengan ID "${elementId}" tidak ditemukan saat mencoba menambah listener.`);
+                }
+            } catch(e) {
+                 console.error(`[ERROR] Gagal menambah listener ke #${elementId}:`, e);
+            }
+        }
         
         // --- Fungsi Utama (Dipanggil setelah DOM siap) ---
         function mainAppLogic() {
             console.log("[DEBUG] DOM loaded. Memulai mainAppLogic.");
 
-            // Pengecekan Kritis: Pastikan Firebase terinisialisasi
              if (!db || !auth) {
                  console.error("!!! KRITIS: DB atau Auth tidak terinisialisasi di mainAppLogic !!!");
                  alert("Error internal: Layanan Firebase tidak siap. Coba refresh.");
-                 return; // Hentikan jika Firebase tidak siap
+                 return; 
              }
 
             // Elemen UI
             const loginView = document.getElementById('login-view');
-            // ... (elemen UI lainnya)
+            const userView = document.getElementById('user-view');
+            const mainContent = document.getElementById('main-content');
+            const userEmailSpan = document.getElementById('user-email');
+            const chatbotFab = document.getElementById('chatbot-fab');
+            const settingsFab = document.getElementById('settings-fab');
+            const adminPanel = document.getElementById('admin-panel'); 
+            const loginStatus = document.getElementById('login-status'); // Elemen status login
+            const loginButtonsContainer = document.getElementById('login-buttons-container'); // Kontainer tombol login
+
 
             // --- Logika Label Slider Manual ---
             const urgencyLabels = { /* ... */ };
@@ -151,33 +169,67 @@
 
             // --- Otak Aplikasi: onAuthStateChanged ---
             console.log("[DEBUG] Memasang listener onAuthStateChanged...");
-            // *** PERBAIKAN: Tambah pengecekan auth sebelum memasang listener ***
             if (auth) {
-                onAuthStateChanged(auth, async (user) => { /* ... (logika onAuthStateChanged tidak berubah) ... */ }, 
+                onAuthStateChanged(auth, async (user) => {
+                    console.log("[DEBUG] onAuthStateChanged terpanggil. User:", user ? `UID: ${user.uid.substring(0,5)}...` : 'null');
+                     
+                     // Sembunyikan semua di awal
+                     if(adminPanel) adminPanel.classList.add('hidden');
+                     if(chatbotFab) chatbotFab.classList.add('hidden');
+                     if(settingsFab) settingsFab.classList.add('hidden');
+                     if(mainContent) mainContent.classList.add('hidden'); 
+                     if(userView) userView.classList.add('hidden'); 
+                     if(loginView) loginView.classList.add('hidden'); 
+                     if(loginStatus) loginStatus.classList.add('hidden'); // Sembunyikan status loading
+                     if(loginButtonsContainer) loginButtonsContainer.classList.add('hidden'); // Sembunyikan tombol
+
+                    if (user) {
+                        userId = user.uid; 
+                        if(userEmailSpan) userEmailSpan.innerHTML = user.isAnonymous ? `Tamu (${user.uid.substring(0, 6)}...)` : user.email;
+                        // Tampilkan UI user login
+                        if(userView) userView.classList.remove('hidden');
+                        if(mainContent) mainContent.classList.remove('hidden');
+                        if(chatbotFab) chatbotFab.classList.remove('hidden'); 
+                        if(settingsFab) settingsFab.classList.remove('hidden'); 
+                        
+                        if (await checkAdminStatus(user)) {
+                            loadUserListForAdmin(); 
+                        }
+                        loadWeights(); 
+                        listenToTasks();
+                    } else {
+                        userId = null;
+                         // Tampilkan UI login
+                         if(loginView) loginView.classList.remove('hidden'); 
+                         if(loginButtonsContainer) loginButtonsContainer.classList.remove('hidden'); // Tampilkan tombol
+                        if (unsubscribeTasks) {
+                            unsubscribeTasks(); 
+                            unsubscribeTasks = null;
+                        }
+                        renderTasks([]); 
+                    }
+                }, 
                 (error) => {
                      console.error("!!! KRITIS: Error pada onAuthStateChanged !!!", error);
                      alert("Terjadi error saat memeriksa status login. Cek Console (F12).");
+                     // Tampilkan tombol login jika ada error
+                     if(loginView) loginView.classList.remove('hidden'); 
+                     if(loginButtonsContainer) loginButtonsContainer.classList.remove('hidden');
+                     if(loginStatus) loginStatus.textContent = "Gagal memeriksa status login.";
                 });
                 console.log("[DEBUG] Listener onAuthStateChanged terpasang.");
             } else {
                  console.error("!!! KRITIS: Objek Auth tidak valid, listener onAuthStateChanged tidak bisa dipasang !!!");
                  alert("Error internal: Layanan Autentikasi tidak siap.");
+                 // Tampilkan tombol login sebagai fallback
+                  if(loginView) loginView.classList.remove('hidden'); 
+                  if(loginButtonsContainer) loginButtonsContainer.classList.remove('hidden');
+                  if(loginStatus) loginStatus.textContent = "Gagal memuat autentikasi.";
             }
 
 
             // --- Fungsi Path Collection ---
-            const getTasksCollectionRef = (targetUserId) => { 
-                // *** PERBAIKAN: Tambah pengecekan db ***
-                if (!db) { console.error("[ERROR] DB tidak valid di getTasksCollectionRef."); return null; }
-                const idToUse = targetUserId || userId; 
-                if (!idToUse) return null;
-                try {
-                    return collection(db, `artifacts/${appId}/users/${idToUse}/tasks`);
-                } catch (error) {
-                    console.error("[ERROR] Gagal membuat CollectionReference:", error);
-                    return null;
-                }
-             };
+            const getTasksCollectionRef = (targetUserId) => { /* ... */ };
 
             // --- Fungsi Hitung Skor ---
             function calculatePriorityScore(urgency, pentingnya, time) { /* ... */ }
@@ -188,10 +240,23 @@
             // --- Event Listener Form Manual ---
              safeAddEventListener('task-form', 'submit', async (e) => { /* ... */ });
 
-            // --- Fungsi Login/Logout/Ekspor ---
-            const signInWithGoogle = () => { if(auth) { /* ... */ } else { console.error("Auth not ready");}};
-            const signInAsGuest = () => { if(auth) { /* ... */ } else { console.error("Auth not ready");}};
-            const doSignOut = () => { if(auth) { /* ... */ } else { console.error("Auth not ready");}};
+            // --- Fungsi Login/Logout/Ekspor (Dipindahkan ke sini agar auth pasti ada) ---
+            const signInWithGoogle = () => { 
+                console.log("[DEBUG] Fungsi signInWithGoogle dipanggil.");
+                if(auth) { signInWithPopup(auth, new GoogleAuthProvider()).catch(err => console.error("Google Sign-In Error:", err)); } 
+                else { console.error("Auth not ready for Google Sign-In"); alert("Layanan login belum siap.");}
+            }
+            const signInAsGuest = () => { 
+                console.log("[DEBUG] Fungsi signInAsGuest dipanggil.");
+                if(auth) { signInAnonymously(auth).catch(err => console.error("Guest Sign-In Error:", err)); } 
+                else { console.error("Auth not ready for Guest Sign-In"); alert("Layanan login belum siap.");}
+            }
+            const doSignOut = () => { 
+                console.log("[DEBUG] Fungsi doSignOut dipanggil.");
+                if(auth) { signOut(auth).catch(err => console.error("Sign Out Error:", err)); } 
+                else { console.error("Auth not ready for Sign Out"); alert("Layanan logout belum siap.");}
+            }
+            // --- Memasang listener login SETELAH DOM siap ---
             safeAddEventListener('login-button', 'click', signInWithGoogle);
             safeAddEventListener('guest-login-button', 'click', signInAsGuest);
             safeAddEventListener('logout-button', 'click', doSignOut);
@@ -199,61 +264,10 @@
             const exportSelectedUserCsv = async () => { /* ... */ };
             safeAddEventListener('download-button', 'click', exportSelectedUserCsv);
 
-            // --- Fungsi Baca & Tampil Data ---
-            // *** PERBAIKAN: Fungsi listenToTasks dengan pengecekan lebih detail ***
-            function listenToTasks() { 
-                 if (!userId) { console.warn("[WARN] listenToTasks: userId null."); return;}
-                 if (!db) { console.error("[ERROR] listenToTasks: DB tidak valid."); return; } // Cek DB
-                 
-                 if (unsubscribeTasks) {
-                    console.log("[DEBUG] Melepaskan listener tugas lama.");
-                    try { unsubscribeTasks(); } catch(e){ console.warn("Gagal unsubscribe:", e); }
-                    unsubscribeTasks = null;
-                 }
-                 
-                 let collectionRef;
-                 try {
-                     collectionRef = getTasksCollectionRef(userId); 
-                     if (!collectionRef) {
-                         console.error("[ERROR] listenToTasks: Gagal mendapatkan CollectionReference.");
-                         return; // Gagal mendapatkan ref
-                     }
-                 } catch (error) {
-                     console.error("[ERROR] listenToTasks: Error saat memanggil getTasksCollectionRef:", error);
-                     return;
-                 }
 
-                 let q;
-                 try {
-                     q = query(collectionRef); 
-                     if (!q) { 
-                         // Kondisi ini seharusnya tidak terjadi jika collectionRef valid
-                         console.error("[ERROR] listenToTasks: Fungsi query() mengembalikan nilai falsy.");
-                         return; 
-                     }
-                 } catch (error) {
-                     console.error("[ERROR] listenToTasks: Error saat memanggil query():", error);
-                     return;
-                 }
-                 
-                 console.log(`[DEBUG] Memasang listener snapshot ke path: ${collectionRef.path}`);
-                 try {
-                     unsubscribeTasks = onSnapshot(q, (snapshot) => {
-                         console.log(`[DEBUG] Menerima update snapshot. Jumlah dokumen: ${snapshot.size}`);
-                         let tasks = [];
-                         snapshot.forEach((doc) => tasks.push({ id: doc.id, ...doc.data() }));
-                         renderTasks(tasks); 
-                     }, (error) => {
-                         console.error("[ERROR] Gagal mendengarkan data (onSnapshot callback):", error);
-                         const taskListDiv = document.getElementById('task-list');
-                         if (taskListDiv) taskListDiv.innerHTML = `<p class="text-red-500 text-center">Gagal memuat tugas: ${error.message}. Coba refresh.</p>`;
-                     });
-                 } catch (error) {
-                     console.error("[ERROR] Gagal memasang listener onSnapshot:", error);
-                     alert("Gagal terhubung ke update data tugas. Cek Console.");
-                 }
-             }
-            function renderTasks(tasks) { /* ... (fungsi render tidak berubah) ... */ }
+            // --- Fungsi Baca & Tampil Data ---
+            function listenToTasks() { /* ... */ }
+            function renderTasks(tasks) { /* ... */ }
             
             // --- Fungsi Global (onclick) ---
             window.toggleTaskStatus = async (taskId, currentStatus) => { /* ... */ };
@@ -292,7 +306,22 @@
         if (document.readyState === 'loading') { 
             document.addEventListener('DOMContentLoaded', mainAppLogic);
         } else { 
-            mainAppLogic();
+            // Jika DOM sudah siap saat skrip ini dieksekusi
+            // Pastikan Firebase sudah siap sebelum memanggil mainAppLogic
+            if (auth) { // Cek apakah auth sudah diinisialisasi
+                 mainAppLogic();
+            } else {
+                 console.warn("[WARN] DOM siap, tapi Firebase belum. Menunggu event auth...");
+                 // onAuthStateChanged akan menangani pemanggilan mainAppLogic secara implisit
+                 // Kita tambahkan fallback jika auth tidak pernah siap
+                 setTimeout(() => {
+                     if (!auth) {
+                          console.error("!!! KRITIS: Firebase Auth gagal siap setelah timeout.");
+                          const loginStatus = document.getElementById('login-status');
+                          if(loginStatus) loginStatus.textContent = "Gagal memuat layanan autentikasi.";
+                     }
+                 }, 5000); // Timeout 5 detik
+            }
         }
 
     </script>
