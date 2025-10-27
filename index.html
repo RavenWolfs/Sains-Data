@@ -55,19 +55,65 @@
 
         <!-- Konten Utama -->
         <main id="main-content" class="hidden">
-            <!-- ... (Isi main content tidak berubah) ... -->
+            <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                <h2 class="text-xl font-semibold mb-4">Tambah Tugas (Manual)</h2>
+                <!-- Form input -->
+                <form id="task-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div class="md:col-span-2"><label for="task-name" class="block text-sm font-medium text-slate-700 mb-1">Nama Tugas</label><input type="text" id="task-name" placeholder="Contoh: Laporan Praktikum Jaringan Komputer" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
+                    <div>
+                        <label for="task-urgency" class="block text-sm font-medium text-slate-700 mb-1">Urgensi</label>
+                        <input type="range" id="task-urgency" min="1" max="5" value="3" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        <span id="urgency-value" class="text-sm text-slate-500">3 (Lusa)</span>
+                    </div>
+                    <div>
+                        <label for="task-importance" class="block text-sm font-medium text-slate-700 mb-1">Pentingnya</label>
+                        <input type="range" id="task-importance" min="1" max="5" value="3" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        <span id="importance-value" class="text-sm text-slate-500">3 (Tugas Besar)</span>
+                    </div>
+                    <div class="md:col-span-2"><label for="task-time" class="block text-sm font-medium text-slate-700 mb-1">Estimasi Waktu (Jam)</label><input type="number" id="task-time" min="0.5" step="0.5" value="1" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
+                    <div class="md:col-span-2"><button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">Prioritaskan & Tambah</button></div>
+                </form>
+            </div>
+            
+            <div>
+                <!-- Daftar Tugas & Panel Admin -->
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Daftar Tugas Anda (Diurutkan)</h2>
+                </div>
+                <div id="admin-panel" class="hidden bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
+                   <!-- Panel Admin -->
+                   <h3 class="text-lg font-semibold text-yellow-900">Panel Admin</h3>
+                   <p class="text-sm text-yellow-700 mb-3">Pilih pengguna untuk mengunduh data tugas mereka.</p>
+                   <div class="flex flex-col sm:flex-row gap-2">
+                       <label for="user-select-dropdown" class="sr-only">Pilih pengguna</label>
+                       <select id="user-select-dropdown" class="grow px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                           <option value="">Memuat daftar pengguna...</option>
+                       </select>
+                       <button id="download-button" class="bg-green-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                           Download Data
+                       </button>
+                   </div>
+                </div>
+                <div id="task-list" class="space-y-4">
+                    <p id="loading-tasks" class="text-slate-500 text-center">Memuat tugas...</p>
+                </div>
+            </div>
         </main>
     </div>
 
     <!-- Tombol FAB -->
     <button id="chatbot-fab" class="hidden bg-blue-600 text-white p-4 rounded-full shadow-lg" title="Buka Asisten Tugas" aria-label="Buka Asisten Tugas">
-       <!-- Icon --> <span class="sr-only">Buka Asisten Tugas</span>
+       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+       <span class="sr-only">Buka Asisten Tugas</span>
     </button>
     <!-- Tombol FAB Settings dihapus -->
 
     <!-- Modal -->
     <div id="chatbot-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-         <!-- ... (Konten Modal Chatbot) ... -->
+         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col" style="height: 70vh;">
+            <!-- ... (Konten Modal Chatbot) ... -->
+        </div>
     </div>
     <!-- Modal Settings dihapus -->
 
@@ -107,13 +153,11 @@
         } catch (error) {
              console.error("!!! KRITIS [INIT]: Gagal menginisialisasi Firebase !!!", error);
              alert("Gagal menginisialisasi Firebase. Aplikasi tidak bisa berjalan. Cek Console (F12). Error: " + error.message);
-             // Tampilkan pesan error di UI jika init gagal total
              const loginStatus = document.getElementById('login-status');
              if (loginStatus) {
                  loginStatus.textContent = "Gagal memuat Firebase!";
                  loginStatus.classList.remove('hidden');
              }
-             // Hentikan eksekusi lebih lanjut
              throw new Error("Firebase init failed"); 
         }
 
@@ -121,7 +165,6 @@
         function safeAddEventListener(elementId, event, handler) {
              try {
                 const element = document.getElementById(elementId);
-                // console.log(`[DEBUG][LISTENER] Mencari #${elementId}. Ditemukan: ${element ? 'Ya' : 'Tidak'}`); 
                 if (element) {
                     element.addEventListener(event, handler);
                     console.log(`[DEBUG][LISTENER] Listener added for ${event} on #${elementId}`); 
@@ -143,7 +186,7 @@
                  return; 
              }
 
-            // Elemen UI (cari sekali di awal)
+            // Elemen UI
             const loginView = document.getElementById('login-view');
             const userView = document.getElementById('user-view');
             const mainContent = document.getElementById('main-content');
@@ -182,9 +225,19 @@
                     if (user) {
                         userId = user.uid; 
                         if(userEmailSpan) userEmailSpan.innerHTML = user.isAnonymous ? `Tamu (${user.uid.substring(0, 6)}...)` : user.email;
+                        
+                        // *** PERBAIKAN: Cari elemen mainContent di sini ***
+                        const mainContentElement = document.getElementById('main-content'); 
+                        console.log(`[DEBUG][AUTH] Mencari #main-content. Ditemukan: ${mainContentElement ? 'Ya' : 'Tidak'}`);
+                        
                         // Tampilkan UI user login
                         if(userView) userView.classList.remove('hidden');
-                        if(mainContent) mainContent.classList.remove('hidden');
+                        if(mainContentElement) { // Gunakan elemen yang baru dicari
+                            mainContentElement.classList.remove('hidden'); 
+                            console.log("[DEBUG][AUTH] Menampilkan #main-content.");
+                        } else {
+                            console.error("[ERROR][AUTH] Elemen #main-content tidak ditemukan saat user login!");
+                        }
                         if(chatbotFab) chatbotFab.classList.remove('hidden'); 
                         
                         if (await checkAdminStatus(user)) {
@@ -194,11 +247,11 @@
                     } else {
                         userId = null;
                          // Tampilkan UI login
-                         console.log("[DEBUG][AUTH] User null, menampilkan tombol login."); // Log tambahan
+                         console.log("[DEBUG][AUTH] User null, menampilkan tombol login."); 
                          if(loginView) loginView.classList.remove('hidden'); 
-                         if(loginButtonsContainer) loginButtonsContainer.classList.remove('hidden'); // Tampilkan tombol
-                         if(loginStatus) loginStatus.textContent = "Silakan login atau masuk sebagai tamu."; // Update status
-                         if(loginStatus) loginStatus.classList.remove('hidden'); // Tampilkan status
+                         if(loginButtonsContainer) loginButtonsContainer.classList.remove('hidden'); 
+                         if(loginStatus) loginStatus.textContent = "Silakan login atau masuk sebagai tamu."; 
+                         if(loginStatus) loginStatus.classList.remove('hidden'); 
 
                         if (unsubscribeTasks) {
                             unsubscribeTasks(); 
@@ -239,31 +292,9 @@
              safeAddEventListener('task-form', 'submit', async (e) => { /* ... */ });
 
             // --- Fungsi & Listener Login/Logout/Ekspor ---
-            const signInWithGoogle = () => { 
-                console.log("[DEBUG][LOGIN] Fungsi signInWithGoogle dipanggil.");
-                if(auth) { signInWithPopup(auth, new GoogleAuthProvider()).catch(err => {
-                    console.error("Google Sign-In Error:", err);
-                    alert(`Gagal login dengan Google: ${err.message}. Pastikan popup tidak diblokir.`); // Pesan lebih jelas
-                 }); } 
-                else { console.error("[ERROR][LOGIN] Auth not ready for Google Sign-In"); alert("Layanan login belum siap.");}
-            }
-            const signInAsGuest = () => { 
-                console.log("[DEBUG][LOGIN] Fungsi signInAsGuest dipanggil.");
-                if(auth) { signInAnonymously(auth).catch(err => {
-                    console.error("Guest Sign-In Error:", err);
-                    alert(`Gagal masuk sebagai tamu: ${err.message}`);
-                }); } 
-                else { console.error("[ERROR][LOGIN] Auth not ready for Guest Sign-In"); alert("Layanan login belum siap.");}
-            }
-            const doSignOut = () => { 
-                console.log("[DEBUG][LOGIN] Fungsi doSignOut dipanggil.");
-                if(auth) { signOut(auth).catch(err => {
-                     console.error("Sign Out Error:", err);
-                     alert(`Gagal logout: ${err.message}`);
-                 }); } 
-                else { console.error("[ERROR][LOGIN] Auth not ready for Sign Out"); alert("Layanan logout belum siap.");}
-            }
-            // *** Memasang listener login SETELAH DOM siap ***
+            const signInWithGoogle = () => { /* ... */ };
+            const signInAsGuest = () => { /* ... */ };
+            const doSignOut = () => { /* ... */ };
             safeAddEventListener('login-button', 'click', signInWithGoogle);
             safeAddEventListener('guest-login-button', 'click', signInAsGuest);
             safeAddEventListener('logout-button', 'click', doSignOut);
@@ -304,32 +335,27 @@
                  console.log("[DEBUG][LOADER] Firebase ready, calling mainAppLogic immediately.");
                  mainAppLogic();
             } else {
-                 console.warn("[WARN][LOADER] DOM ready, tapi Firebase (auth/db) belum. Waiting for auth state change or timeout...");
-                 // Coba panggil lagi setelah delay, sebagai fallback jika init lambat
-                 // Juga, pasang listener onAuthStateChanged di sini sebagai fallback jika yang di atas gagal
-                 let fallbackTimeout = setTimeout(() => {
-                     console.log("[DEBUG][LOADER] Fallback timeout reached.");
-                     if (auth && db && !document.querySelector('#main-content:not(.hidden)')) { // Cek jika mainAppLogic belum jalan
-                         console.warn("[WARN][LOADER] Firebase ready after timeout, calling mainAppLogic.");
-                         mainAppLogic();
-                     } else if (!auth || !db) {
-                          console.error("!!! KRITIS [LOADER]: Firebase Auth/DB gagal siap setelah timeout.");
-                          const loginStatus = document.getElementById('login-status');
-                          if(loginStatus) loginStatus.textContent = "Gagal memuat layanan Firebase.";
-                     }
-                 }, 3000); // Tunggu 3 detik
-                 
-                 // Fallback listener jika yang di atas gagal
+                 console.warn("[WARN][LOADER] DOM ready, tapi Firebase (auth/db) belum. Waiting...");
+                 // Fallback listener
                  if (auth) {
                      const unsubscribeFallback = onAuthStateChanged(auth, (user) => {
                          console.log("[DEBUG][LOADER] Fallback onAuthStateChanged triggered.");
-                         clearTimeout(fallbackTimeout); // Batalkan timeout jika listener ini jalan
-                         unsubscribeFallback(); // Lepas listener ini setelah jalan sekali
-                         if (!document.querySelector('#main-content:not(.hidden)')) { // Cek jika mainAppLogic belum jalan
-                              console.log("[DEBUG][LOADER] Calling mainAppLogic from fallback listener.");
+                         unsubscribeFallback(); // Lepas listener ini
+                         // Cek lagi apakah mainAppLogic sudah jalan atau belum
+                         const mainContentEl = document.getElementById('main-content');
+                         if (mainContentEl && mainContentEl.classList.contains('hidden') && user) { // Jika main content masih hidden dan ada user
+                             console.log("[DEBUG][LOADER] Calling mainAppLogic from fallback listener.");
                              mainAppLogic();
+                         } else if (mainContentEl && !mainContentEl.classList.contains('hidden')) {
+                              console.log("[DEBUG][LOADER] Fallback listener: mainAppLogic already seems to have run.");
+                         } else {
+                              console.log("[DEBUG][LOADER] Fallback listener: No user or main content not found.");
                          }
                      });
+                 } else {
+                      console.error("!!! KRITIS [LOADER]: Fallback cannot run, auth object invalid.");
+                      const loginStatus = document.getElementById('login-status');
+                      if(loginStatus) loginStatus.textContent = "Gagal memuat layanan autentikasi.";
                  }
             }
         }
