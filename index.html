@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prio</title>
+    <title>Prioritask Kuliah - Asisten Tugas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -16,26 +16,63 @@
         .priority-medium { background-color: #FEF3C7; color: #92400E; }
         .priority-low { background-color: #D1FAE5; color: #065F46; }
 
-        /* Gaya tambahan */
-        #chatbot-fab { position: fixed; bottom: 2rem; transition: all 0.3s ease; z-index: 40; right: 2rem; }
-        #chatbot-fab:hover { transform: scale(1.1); }
-        #chatbot-modal { background-color: rgba(0, 0, 0, 0.5); }
-        .chat-bubble { max-width: 80%; padding: 0.75rem 1rem; border-radius: 1rem; }
-        .chat-bubble-user { background-color: #3B82F6; color: white; border-bottom-right-radius: 0.25rem; align-self: flex-end; }
-        .chat-bubble-bot { background-color: #E5E7EB; color: #1F2937; border-bottom-left-radius: 0.25rem; align-self: flex-start; }
+        /* Gaya untuk Chatbot */
+        #chatbot-fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            transition: all 0.3s ease;
+        }
+        #chatbot-fab:hover {
+            transform: scale(1.1);
+        }
+        #chatbot-modal {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .chat-bubble {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+        }
+        .chat-bubble-user {
+            background-color: #3B82F6; /* blue-500 */
+            color: white;
+            border-bottom-right-radius: 0.25rem;
+            align-self: flex-end;
+        }
+        .chat-bubble-bot {
+            background-color: #E5E7EB; /* gray-200 */
+            color: #1F2937; /* gray-800 */
+            border-bottom-left-radius: 0.25rem;
+            align-self: flex-start;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
     <div id="app-container" class="max-w-4xl mx-auto p-4 md:p-8">
         
         <header class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Prio</h1>
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Prioritask Kuliah</h1>
             <p class="mt-2 text-slate-600">Asisten cerdas untuk memprioritaskan tugas kuliah Anda.</p>
         </header>
 
         <!-- UI Login -->
         <div id="auth-container" class="mb-6 text-center">
-             <!-- ... (Konten Login) ... -->
+             <div id="login-view">
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button id="login-button" class="bg-white text-slate-700 font-semibold py-2 px-6 border border-slate-300 rounded-lg shadow-sm hover:bg-slate-100 transition-colors flex items-center justify-center w-full sm:w-auto">
+                        <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48" width="48px" height="48px"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.902,36.632,44,30.852,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path></svg>
+                        Login dengan Google
+                    </button>
+                    <button id="guest-login-button" class="bg-slate-600 text-white font-semibold py-2 px-6 rounded-lg shadow-sm hover:bg-slate-700 transition-colors w-full sm:w-auto">
+                        Masuk sebagai Tamu
+                    </button>
+                </div>
+            </div>
+            <div id="user-view" class="hidden">
+                 <p class="text-sm text-slate-500 mb-2">Login sebagai <strong id="user-email"></strong></p>
+                 <button id="logout-button" class="bg-red-500 text-white font-semibold py-1 px-4 text-sm rounded-lg hover:bg-red-600 transition-colors">Logout</button>
+            </div>
         </div>
 
         <!-- Konten Utama -->
@@ -44,7 +81,20 @@
                 <h2 class="text-xl font-semibold mb-4">Tambah Tugas (Manual)</h2>
                 <!-- Form input -->
                 <form id="task-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     <!-- ... (Input Form) ... -->
+                    <div class="md:col-span-2"><label for="task-name" class="block text-sm font-medium text-slate-700 mb-1">Nama Tugas</label><input type="text" id="task-name" placeholder="Contoh: Laporan Praktikum Jaringan Komputer" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
+                    <div>
+                        <label for="task-urgency" class="block text-sm font-medium text-slate-700 mb-1">Urgensi</label>
+                        <input type="range" id="task-urgency" min="1" max="5" value="3" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        <span id="urgency-value" class="text-sm text-slate-500">3 (Lusa)</span>
+                    </div>
+                    <div>
+                        <!-- ID input tetap 'task-importance' untuk konsistensi HTML -->
+                        <label for="task-importance" class="block text-sm font-medium text-slate-700 mb-1">Pentingnya</label>
+                        <input type="range" id="task-importance" min="1" max="5" value="3" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        <span id="importance-value" class="text-sm text-slate-500">3 (Tugas Besar)</span>
+                    </div>
+                    <div class="md:col-span-2"><label for="task-time" class="block text-sm font-medium text-slate-700 mb-1">Estimasi Waktu (Jam)</label><input type="number" id="task-time" min="0.5" step="0.5" value="1" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
+                    <div class="md:col-span-2"><button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">Prioritaskan & Tambah</button></div>
                 </form>
             </div>
             
@@ -53,9 +103,22 @@
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-semibold">Daftar Tugas Anda (Diurutkan)</h2>
                 </div>
+
+                <!-- Panel Admin untuk Download -->
                 <div id="admin-panel" class="hidden bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
-                   <!-- Panel Admin -->
+                    <h3 class="text-lg font-semibold text-yellow-900">Panel Admin</h3>
+                    <p class="text-sm text-yellow-700 mb-3">Pilih pengguna untuk mengunduh data tugas mereka.</p>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <select id="user-select-dropdown" class="flex-grow px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Memuat daftar pengguna...</option>
+                        </select>
+                        <button id="download-button" class="bg-green-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Download Data
+                        </button>
+                    </div>
                 </div>
+
                 <div id="task-list" class="space-y-4">
                     <p id="loading-tasks" class="text-slate-500 text-center">Memuat tugas...</p>
                 </div>
@@ -63,266 +126,471 @@
         </main>
     </div>
 
-    <!-- Tombol FAB -->
-    <button id="chatbot-fab" class="hidden bg-blue-600 text-white p-4 rounded-full shadow-lg" title="Buka Asisten Tugas" aria-label="Buka Asisten Tugas">
-       <!-- Icon --> <span class="sr-only">Buka Asisten Tugas</span>
+    <!-- Tombol Chatbot FAB -->
+    <button id="chatbot-fab" class="hidden bg-blue-600 text-white p-4 rounded-full shadow-lg fixed bottom-8 right-8 z-40">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
     </button>
-    <!-- Tombol FAB Settings dihapus -->
 
-    <!-- Modal -->
-    <div id="chatbot-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-         <!-- ... (Konten Modal Chatbot) ... -->
+    <!-- Modal Chatbot -->
+    <div id="chatbot-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col" style="height: 70vh;">
+            <!-- Header Modal -->
+            <div class="flex justify-between items-center p-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold">Asisten Tugas AI</h3>
+                <button id="chat-close" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Jendela Chat -->
+            <div id="chat-messages" class="flex-grow p-4 space-y-4 overflow-y-auto flex flex-col">
+                <div class="chat-bubble chat-bubble-bot">
+                    Halo! Saya asisten Prioritask. Coba ketik tugas Anda dalam satu kalimat.
+                    <br><br>
+                    Contoh: "Saya ada kuis kalkulus besok, penting sekali, butuh 2 jam belajar."
+                </div>
+            </div>
+
+            <!-- Area Konfirmasi -->
+            <div id="chat-confirmation" class="hidden p-4 border-t border-gray-200 bg-gray-50 text-center">
+                <p id="chat-confirmation-text" class="text-sm mb-2">Apakah detail di atas sudah benar?</p>
+                <div class="flex gap-4 justify-center">
+                    <button id="chat-confirm-yes" class="bg-green-500 text-white py-1 px-4 rounded-lg hover:bg-green-600">Ya, Simpan Tugas</button>
+                    <button id="chat-confirm-no" class="bg-red-500 text-white py-1 px-4 rounded-lg hover:bg-red-600">Batal</button>
+                </div>
+            </div>
+
+            <!-- Input Chat -->
+            <div id="chat-input-area" class="p-4 border-t border-gray-200">
+                <form id="chat-form" class="flex gap-2">
+                    <input type="text" id="chat-input" placeholder="Ketik tugas Anda..." class="flex-grow px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button type="submit" id="chat-send" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">
+                        Kirim
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
-    <!-- Modal Settings dihapus -->
+
 
     <!-- Firebase SDK -->
     <script type="module">
-        // --- Impor Firebase ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp, doc, updateDoc, deleteDoc, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // --- Konfigurasi Firebase ---
-        const firebaseConfig = { /* ... */ };
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("[DEBUG] Halaman HTML selesai dimuat. Memulai skrip.");
 
-        // --- Inisialisasi Aplikasi ---
-        let db = null, auth = null, userId = null, unsubscribeTasks = null; 
-        let pendingTaskData = null; 
-        const appId = 'asisten-tugas-pribadi';
-        let app = null; 
-        
-        try { /* ... (Inisialisasi Firebase) ... */ } 
-        catch (error) { /* ... (Error Handling Init) ... */ }
-
-        // --- Fungsi utilitas aman ---
-        function safeAddEventListener(elementId, event, handler) { /* ... */ }
-        
-        // --- Fungsi Utama (Dipanggil setelah DOM siap) ---
-        function mainAppLogic() {
-            console.log("[DEBUG][MAIN] DOM loaded. Memulai mainAppLogic.");
-
-             if (!db || !auth) { /* ... (Cek Init) ... */ }
-
-            // Elemen UI
-            const loginView = document.getElementById('login-view');
-            // ... (Elemen UI lainnya)
-
-            // --- Logika Label Slider Manual ---
-            const urgencyLabels = { /* ... */ };
-            const importanceLabels = { /* ... */ };
-            safeAddEventListener('task-urgency', 'input', (e) => { /* ... */ });
-            safeAddEventListener('task-importance', 'input', (e) => { /* ... */ });
-
-            // --- Fungsi Admin ---
-            const checkAdminStatus = async (user) => { /* ... */ };
-            const loadUserListForAdmin = async () => { /* ... */ };
-
-            // --- Otak Aplikasi: onAuthStateChanged ---
-            console.log("[DEBUG][AUTH] Memasang listener onAuthStateChanged...");
-            if (auth) {
-                onAuthStateChanged(auth, async (user) => { /* ... (Logika Auth State tidak berubah) ... */ });
-                console.log("[DEBUG][AUTH] Listener onAuthStateChanged terpasang.");
-            } else { /* ... (Error Handling Auth) ... */ }
-
-
-            // --- Fungsi Path Collection ---
-            const getTasksCollectionRef = (targetUserId) => { /* ... */ };
-
-            // --- Fungsi Hitung Skor (Hardcoded) ---
-            function calculatePriorityScore(urgency, pentingnya, time) { /* ... */ }
-
-            // --- Fungsi Tambah Tugas ---
-            const addNewTask = async (taskData) => { /* ... */ };
-
-            // --- Event Listener Form Manual ---
-             safeAddEventListener('task-form', 'submit', async (e) => { /* ... */ });
-
-            // --- Fungsi & Listener Login/Logout/Ekspor ---
-            const signInWithGoogle = () => { /* ... */ };
-            const signInAsGuest = () => { /* ... */ };
-            const doSignOut = () => { /* ... */ };
-            safeAddEventListener('login-button', 'click', signInWithGoogle);
-            safeAddEventListener('guest-login-button', 'click', signInAsGuest);
-            safeAddEventListener('logout-button', 'click', doSignOut);
+            // Konfigurasi Firebase
+            const firebaseConfig = {
+                apiKey: "AIzaSyC4WwUhxG5XROTr5lSHvhDS4zj2Lqmw1U0",
+                authDomain: "asisten-tugas-pribadi.firebaseapp.com",
+                projectId: "asisten-tugas-pribadi",
+                storageBucket: "asisten-tugas-pribadi.appspot.com",
+                messagingSenderId: "994319187177",
+                appId: "1:994319187177:web:58ebbc1fce8645eabd4478"
+            };
             
-            const exportSelectedUserCsv = async () => { /* ... */ };
-            safeAddEventListener('download-button', 'click', exportSelectedUserCsv);
+            // Inisialisasi
+            let db, auth, userId, unsubscribeTasks;
+            let pendingTaskData = null; // Menyimpan data dari AI sementara
+            const appId = 'asisten-tugas-pribadi';
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            console.log("[DEBUG] Firebase diinisialisasi.");
 
+            // --- Elemen UI ---
+            const loginView = document.getElementById('login-view');
+            const userView = document.getElementById('user-view');
+            const mainContent = document.getElementById('main-content');
+            const userEmailSpan = document.getElementById('user-email');
+            const loginButton = document.getElementById('login-button');
+            const logoutButton = document.getElementById('logout-button');
+            const guestLoginButton = document.getElementById('guest-login-button');
+            const taskForm = document.getElementById('task-form');
+            const taskListDiv = document.getElementById('task-list');
+            const adminPanel = document.getElementById('admin-panel');
+            const userSelectDropdown = document.getElementById('user-select-dropdown');
+            const downloadButton = document.getElementById('download-button');
+            const chatbotFab = document.getElementById('chatbot-fab');
+            const chatbotModal = document.getElementById('chatbot-modal');
+            const chatCloseButton = document.getElementById('chat-close');
+            const chatMessages = document.getElementById('chat-messages');
+            const chatForm = document.getElementById('chat-form');
+            const chatInput = document.getElementById('chat-input');
+            const chatInputArea = document.getElementById('chat-input-area');
+            const chatConfirmation = document.getElementById('chat-confirmation');
+            const chatConfirmationText = document.getElementById('chat-confirmation-text');
+            const chatConfirmYes = document.getElementById('chat-confirm-yes');
+            const chatConfirmNo = document.getElementById('chat-confirm-no');
 
-            // --- Fungsi Baca & Tampil Data ---
-            // *** PERBAIKAN: Logging detail di listenToTasks ***
-            function listenToTasks() { 
-                 console.log("[DEBUG][LISTEN] Fungsi listenToTasks dipanggil."); // Log Awal
-                 if (!userId) { console.warn("[WARN][LISTEN] userId null. Listener tidak dipasang."); return;}
-                 if (!db) { console.error("[ERROR][LISTEN] DB tidak valid. Listener tidak dipasang."); return; } 
-                 
-                 if (unsubscribeTasks) {
-                    console.log("[DEBUG][LISTEN] Melepaskan listener tugas lama.");
-                    try { unsubscribeTasks(); } catch(e){ console.warn("[WARN][LISTEN] Gagal unsubscribe:", e); }
-                    unsubscribeTasks = null;
-                 }
-                 
-                 let collectionRef;
-                 try {
-                     collectionRef = getTasksCollectionRef(userId); 
-                     if (!collectionRef) {
-                         console.error("[ERROR][LISTEN] Gagal mendapatkan CollectionReference.");
-                         return; 
-                     }
-                      console.log(`[DEBUG][LISTEN] Berhasil mendapatkan CollectionReference untuk path: ${collectionRef.path}`);
-                 } catch (error) {
-                     console.error("[ERROR][LISTEN] Error saat memanggil getTasksCollectionRef:", error);
-                     return;
-                 }
+            // --- Logika Label Slider (diperbarui untuk kuliah) ---
+            const urgencyLabels = { 1: 'Santai (> Seminggu)', 2: 'Minggu Ini', 3: 'Lusa', 4: 'Besok', 5: 'Hari Ini (Mendesak)' };
+            const importanceLabels = { 1: 'Catatan', 2: 'Tugas Harian', 3: 'Tugas Besar/Projek', 4: 'Kuis/Presentasi', 5: 'Ujian/Final' };
+            const urgencySlider = document.getElementById('task-urgency');
+            const importanceSlider = document.getElementById('task-importance');
+            const urgencyValue = document.getElementById('urgency-value');
+            const importanceValue = document.getElementById('importance-value');
+            urgencySlider.addEventListener('input', () => { urgencyValue.textContent = `${urgencySlider.value} (${urgencyLabels[urgencySlider.value]})`; });
+            importanceSlider.addEventListener('input', () => { importanceValue.textContent = `${importanceSlider.value} (${importanceLabels[importanceSlider.value]})`; });
 
-                 let q;
-                 try {
-                     q = query(collectionRef); 
-                     if (!q) { 
-                         console.error("[ERROR][LISTEN] Fungsi query() mengembalikan nilai falsy.");
-                         return; 
-                     }
-                     console.log("[DEBUG][LISTEN] Berhasil membuat query.");
-                 } catch (error) {
-                     console.error("[ERROR][LISTEN] Error saat memanggil query():", error);
-                     return;
-                 }
-                 
-                 console.log(`[DEBUG][LISTEN] Memasang listener onSnapshot...`);
-                 try {
-                     unsubscribeTasks = onSnapshot(q, (snapshot) => {
-                         console.log(`[DEBUG][LISTEN] Snapshot diterima. Dokumen: ${snapshot.size}`);
-                         let tasks = [];
-                         snapshot.forEach((doc) => {
-                             // Log data mentah
-                             // console.log(`[DEBUG][LISTEN] Data Dokumen (${doc.id}):`, doc.data()); 
-                             tasks.push({ id: doc.id, ...doc.data() });
-                         });
-                         console.log(`[DEBUG][LISTEN] Memanggil renderTasks dengan ${tasks.length} tugas.`);
-                         renderTasks(tasks); // Panggil render
-                     }, (error) => {
-                         // Ini akan menangkap error permissions saat MEMBACA
-                         console.error("[ERROR][LISTEN] Gagal mendengarkan data (callback error onSnapshot):", error);
-                         const taskListDiv = document.getElementById('task-list');
-                         if (taskListDiv) taskListDiv.innerHTML = `<p class="text-red-500 text-center">Gagal memuat tugas: ${error.message}. Coba refresh.</p>`;
-                     });
-                     console.log("[DEBUG][LISTEN] Listener onSnapshot berhasil dipasang.");
-                 } catch (error) {
-                     console.error("[ERROR][LISTEN] Gagal memasang listener onSnapshot:", error);
-                     alert("Gagal terhubung ke update data tugas. Cek Console.");
-                 }
-             }
-
-            // *** PERBAIKAN: Logging detail di renderTasks ***
-            function renderTasks(tasks) { 
-                console.log("[DEBUG][RENDER] Fungsi renderTasks dipanggil dengan data:", tasks); // Log data yang diterima
-                const taskListDiv = document.getElementById('task-list');
-                const loadingP = document.getElementById('loading-tasks');
-                if (!taskListDiv) {
-                    console.error("[ERROR][RENDER] Elemen #task-list tidak ditemukan!");
-                    return; 
-                }
-
-                try { // Bungkus logika render dalam try-catch
-                    if(loadingP) {
-                         loadingP.style.display = 'none'; // Sembunyikan loading
-                         console.log("[DEBUG][RENDER] Menyembunyikan #loading-tasks.");
-                     } else {
-                          console.warn("[WARN][RENDER] Elemen #loading-tasks tidak ditemukan saat render.");
-                     }
-
-                    if (!Array.isArray(tasks)) {
-                         console.error("[ERROR][RENDER] Data tugas bukan array!", tasks);
-                         taskListDiv.innerHTML = `<p class="text-red-500 text-center">Error: Data tugas tidak valid.</p>`;
-                         return;
-                    }
-
-                    if (tasks.length === 0) { 
-                        console.log("[DEBUG][RENDER] Tidak ada tugas, menampilkan pesan kosong.");
-                        taskListDiv.innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-md"><h3 class="font-semibold text-lg">Tidak ada tugas!</h3><p class="text-slate-500 mt-1">Gunakan form manual atau chatbot (kanan bawah) untuk menambah tugas.</p></div>`; 
+            // --- Fungsi Cek Admin & Memuat Daftar Pengguna ---
+            const checkAdminStatus = async (user) => { /* ... (tidak berubah) ... */ 
+                if (user.isAnonymous) return false;
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+                return userDoc.exists() && userDoc.data().isAdmin === true;
+            };
+            const loadUserListForAdmin = async () => { /* ... (tidak berubah) ... */ 
+                adminPanel.classList.add('hidden'); 
+                try {
+                    const usersCollectionRef = collection(db, "users");
+                    const snapshot = await getDocs(usersCollectionRef);
+                    userSelectDropdown.innerHTML = ''; 
+                    if (snapshot.empty) {
+                        userSelectDropdown.innerHTML = '<option value="">Tidak ada pengguna</option>';
                         return;
                     }
-                    
-                    console.log("[DEBUG][RENDER] Melakukan sorting tugas...");
-                    tasks.sort((a, b) => (b.priorityScore ?? -Infinity) - (a.priorityScore ?? -Infinity)); 
-                    console.log("[DEBUG][RENDER] Sorting selesai.");
-
-                    console.log("[DEBUG][RENDER] Memulai mapping tugas ke HTML...");
-                    taskListDiv.innerHTML = tasks.map((task, index) => {
-                         // console.log(`[DEBUG][RENDER] Merender tugas #${index + 1}:`, task); // Log detail setiap tugas (opsional, bisa sangat banyak)
-                        const priorityScoreNum = Number(task.priorityScore);
-                        const urgency = Number(task.urgency);
-                        const pentingnya = Number(task.pentingnya);
-                        const time = Number(task.time);
-
-                        // Pengecekan data sebelum render
-                         if (!task.name || isNaN(urgency) || isNaN(pentingnya) || isNaN(time) || isNaN(priorityScoreNum)) {
-                              console.warn(`[WARN][RENDER] Data tugas tidak lengkap/valid pada indeks ${index}:`, task);
-                              // Tampilkan pesan error untuk item ini saja
-                               return `<div class="task-card bg-red-100 p-4 rounded-xl shadow-md text-red-700">Error: Data tugas tidak valid (ID: ${task.id})</div>`;
-                          }
-
-
-                        // Kembali menggunakan batas hardcoded
-                        const priorityText = priorityScoreNum > 15 ? 'Tinggi' :
-                                           priorityScoreNum > 8 ? 'Sedang' : 'Rendah';
-                        const priorityClass = priorityText === 'Tinggi' ? 'priority-high' :
-                                            priorityText === 'Sedang' ? 'priority-medium' : 'priority-low';
-                        const scoreDisplay = priorityScoreNum.toFixed(1);
-
-                        return `
-                        <div class="task-card bg-white p-4 rounded-xl shadow-md flex items-start gap-4 ${task.status === 'completed' ? 'opacity-60' : ''}">
-                            <input type="checkbox" onchange="window.toggleTaskStatus('${task.id}', '${task.status}')" class="mt-1.5 h-5 w-5 rounded" ${task.status === 'completed' ? 'checked' : ''}>
-                            <div class="flex-grow">
-                                <div class="flex justify-between items-start">
-                                   <p class="font-semibold text-lg ${task.status === 'completed' ? 'line-through' : ''}">${task.name}</p>
-                                   <span class="priority-badge ${priorityClass}">${priorityText} (${scoreDisplay})</span>
-                                </div>
-                                <div class="text-sm text-slate-500 mt-2 flex gap-4 flex-wrap">
-                                    <span>Urgensi: <strong>${urgency}</strong></span>
-                                    <span>Pentingnya: <strong>${pentingnya}</strong></span> 
-                                    <span>Waktu: <strong>${time} jam</strong></span>
-                                </div>
-                            </div>
-                            <button onclick="window.deleteTask('${task.id}')" class="text-slate-400 hover:text-red-500 p-1">
-                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
-                            </button>
-                        </div>`;
-                    }).join('');
-                     console.log("[DEBUG][RENDER] Render HTML selesai.");
-                } catch (renderError) {
-                     console.error("!!! ERROR [RENDER]: Terjadi kesalahan saat merender tugas !!!", renderError);
-                     taskListDiv.innerHTML = `<p class="text-red-500 text-center">Terjadi error saat menampilkan tugas. Cek Console.</p>`;
+                    snapshot.forEach(doc => {
+                        const userData = doc.data();
+                        const userId = doc.id;
+                        const userName = userData.email || `Tamu (${userId.substring(0, 8)}...)`;
+                        const option = document.createElement('option');
+                        option.value = userId;
+                        option.textContent = userName;
+                        userSelectDropdown.appendChild(option);
+                    });
+                    adminPanel.classList.remove('hidden'); 
+                } catch (error) {
+                    console.error("[DEBUG] Gagal memuat daftar pengguna:", error);
+                    adminPanel.innerHTML = `<p class="text-red-600">Gagal memuat daftar pengguna. (Perlu Security Rules Admin)</p>`;
+                    adminPanel.classList.remove('hidden');
                 }
+            };
+
+            // --- Otak Aplikasi: onAuthStateChanged ---
+            onAuthStateChanged(auth, async (user) => {
+                adminPanel.classList.add('hidden');
+                chatbotFab.classList.add('hidden');
+                if (user) {
+                    userId = user.uid; 
+                    userEmailSpan.innerHTML = user.isAnonymous ? `Tamu <span class="font-normal text-slate-400 text-xs">(${user.uid.substring(0, 6)}...)</span>` : user.email;
+                    loginView.classList.add('hidden');
+                    userView.classList.remove('hidden');
+                    mainContent.classList.remove('hidden');
+                    chatbotFab.classList.remove('hidden'); 
+                    if (await checkAdminStatus(user)) {
+                        loadUserListForAdmin();
+                    }
+                    listenToTasks();
+                } else {
+                    userId = null;
+                    loginView.classList.remove('hidden');
+                    userView.classList.add('hidden');
+                    mainContent.classList.add('hidden');
+                    if (unsubscribeTasks) unsubscribeTasks();
+                    renderTasks([]);
+                }
+            });
+
+            // --- Fungsi Path Collection ---
+            const getTasksCollectionRef = (targetUserId) => { /* ... (tidak berubah) ... */ 
+                const idToUse = targetUserId || userId; 
+                if (!idToUse) return null;
+                const path = `artifacts/${appId}/users/${idToUse}/tasks`;
+                return collection(db, path);
+            };
+
+            // --- Fungsi Inti: Menambah Tugas ---
+            const addNewTask = async (taskData) => {
+                if (!userId) {
+                    alert("Error: Anda tidak terautentikasi.");
+                    return false;
+                }
+                try {
+                    // *** PERHITUNGAN SKOR ***
+                    // Pastikan semua input adalah angka
+                    const urgency = Number(taskData.urgency);
+                    const pentingnya = Number(taskData.pentingnya); // Nama variabel sudah benar
+                    const time = Number(taskData.time);
+
+                    // Cek jika ada NaN
+                    if (isNaN(urgency) || isNaN(pentingnya) || isNaN(time)) {
+                        console.error("Data tidak valid:", taskData);
+                        throw new Error("Data input tidak valid. Gagal menghitung skor.");
+                    }
+                    
+                    const priorityScore = parseFloat(((urgency * 3.5) + (pentingnya * 2.5) - (time * 0.5)).toFixed(2));
+                    
+                    const fullTaskData = {
+                        name: taskData.name,
+                        urgency: urgency,
+                        pentingnya: pentingnya, // Nama variabel sudah benar
+                        time: time,
+                        priorityScore: priorityScore,
+                        status: 'pending',
+                        createdAt: serverTimestamp()
+                    };
+
+                    const collectionRef = getTasksCollectionRef(userId);
+                    if (!collectionRef) throw new Error("Referensi koleksi tidak valid (userId null).");
+                    
+                    console.log("[DEBUG] Menambahkan tugas baru:", fullTaskData);
+                    await addDoc(collectionRef, fullTaskData);
+                    return true;
+                } catch (error) {
+                    console.error("GAGAL MENAMBAHKAN TUGAS:", error);
+                    alert("GAGAL: " + error.message);
+                    return false;
+                }
+            };
+
+            // --- Event Listener: Form Manual ---
+            taskForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // ===========================================
+                // --- PERBAIKAN BUG UTAMA ADA DI SINI ---
+                // ===========================================
+                const taskData = {
+                    name: document.getElementById('task-name').value,
+                    urgency: parseInt(document.getElementById('task-urgency').value),
+                    pentingnya: parseInt(document.getElementById('task-importance').value), // FIX: Diubah dari 'importance'
+                    time: parseFloat(document.getElementById('task-time').value)
+                };
+                // ===========================================
+
+                const success = await addNewTask(taskData); // Sekarang taskData mengirim 'pentingnya'
+                if (success) {
+                    e.target.reset(); 
+                    urgencyValue.textContent = '3 (Lusa)';
+                    importanceValue.textContent = '3 (Tugas Besar)';
+                }
+            });
+
+            // --- Fungsi Login/Logout ---
+            const signInWithGoogle = () => signInWithPopup(auth, new GoogleAuthProvider()).catch(err => console.error(err));
+            const signInAsGuest = () => signInAnonymously(auth).catch(err => console.error(err));
+            const doSignOut = () => signOut(auth).catch(err => console.error(err));
+            loginButton.addEventListener('click', signInWithGoogle);
+            guestLoginButton.addEventListener('click', signInAsGuest);
+            logoutButton.addEventListener('click', doSignOut);
+
+            // --- Fungsi Ekspor Admin ---
+            const exportSelectedUserCsv = async () => { /* ... (tidak berubah) ... */ };
+            downloadButton.addEventListener('click', exportSelectedUserCsv);
+
+            // --- Fungsi Baca & Tampil Data ---
+            function listenToTasks() { /* ... (tidak berubah) ... */ 
+                if (!userId) return;
+                if (unsubscribeTasks) unsubscribeTasks();
+                const q = query(getTasksCollectionRef(userId)); 
+                if (!q) return;
+                unsubscribeTasks = onSnapshot(q, (snapshot) => {
+                    let tasks = [];
+                    snapshot.forEach((doc) => tasks.push({ id: doc.id, ...doc.data() }));
+                    tasks.sort((a, b) => b.priorityScore - a.priorityScore);
+                    renderTasks(tasks); 
+                }, (error) => {
+                    console.error("[DEBUG] Gagal mendengarkan data (listenToTasks):", error);
+                });
             }
             
+            // Fungsi renderTasks (sudah benar, tidak berubah)
+            function renderTasks(tasks) {
+                 const loadingP = document.getElementById('loading-tasks');
+                 if(loadingP) loadingP.style.display = 'none';
+                 if (tasks.length === 0) {
+                    taskListDiv.innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-md"><h3 class="font-semibold text-lg">Tidak ada tugas!</h3><p class="text-slate-500 mt-1">Gunakan form manual atau chatbot (kanan bawah) untuk menambah tugas.</p></div>`;
+                    return;
+                }
+                taskListDiv.innerHTML = tasks.map(task => {
+                    const priorityScoreNum = Number(task.priorityScore); // Pastikan ini angka
+                    const priorityText = isNaN(priorityScoreNum) ? 'Rendah (Error)' :
+                                       priorityScoreNum > 15 ? 'Tinggi' :
+                                       priorityScoreNum > 8 ? 'Sedang' : 'Rendah';
+                    const priorityClass = isNaN(priorityScoreNum) ? 'priority-low' :
+                                        priorityScoreNum > 15 ? 'priority-high' :
+                                        priorityScoreNum > 8 ? 'priority-medium' : 'priority-low';
+                    const scoreDisplay = isNaN(priorityScoreNum) ? 'NaN' : priorityScoreNum.toFixed(1);
+
+                    return `
+                    <div class="task-card bg-white p-4 rounded-xl shadow-md flex items-start gap-4 ${task.status === 'completed' ? 'opacity-60' : ''}">
+                        <input type="checkbox" onchange="window.toggleTaskStatus('${task.id}', '${task.status}')" class="mt-1.5 h-5 w-5 rounded" ${task.status === 'completed' ? 'checked' : ''}>
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-start">
+                               <p class="font-semibold text-lg ${task.status === 'completed' ? 'line-through' : ''}">${task.name}</p>
+                               <span class="priority-badge ${priorityClass}">${priorityText} (${scoreDisplay})</span>
+                            </div>
+                            <div class="text-sm text-slate-500 mt-2 flex gap-4">
+                                <span>Urgensi: <strong>${task.urgency}</strong></span>
+                                <span>Pentingnya: <strong>${task.pentingnya}</strong></span>
+                                <span>Waktu: <strong>${task.time} jam</strong></span>
+                            </div>
+                        </div>
+                        <button onclick="window.deleteTask('${task.id}')" class="text-slate-400 hover:text-red-500 p-1">
+                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+                        </button>
+                    </div>`;
+                }).join('');
+            }
             
             // --- Fungsi Global (onclick) ---
-            window.toggleTaskStatus = async (taskId, currentStatus) => { /* ... */ };
-            window.deleteTask = async (taskId) => { /* ... */ };
+            window.toggleTaskStatus = async (taskId, currentStatus) => { /* ... (tidak berubah) ... */ };
+            window.deleteTask = async (taskId) => { /* ... (tidak berubah) ... */ };
             
-            // --- LOGIKA CHATBOT AI ---
-            safeAddEventListener('chatbot-fab', 'click', () => { /* ... */ });
-            safeAddEventListener('chat-close', 'click', () => { /* ... */ });
-            function appendChatMessage(message, sender = 'bot') { /* ... */ }
-            async function callGeminiApi(text) { /* ... */ }
-            safeAddEventListener('chat-form', 'submit', async (e) => { /* ... */ });
-            function resetChat() { /* ... */ }
-            safeAddEventListener('chat-confirm-yes', 'click', async () => { /* ... */ });
-            safeAddEventListener('chat-confirm-no', 'click', () => { /* ... */ });
+            // ===========================================
+            // --- LOGIKA CHATBOT AI (DENGAN PERBAIKAN) ---
+            // ===========================================
 
-            // --- LOGIKA AHP DIHAPUS ---
+            chatbotFab.addEventListener('click', () => chatbotModal.classList.remove('hidden'));
+            chatCloseButton.addEventListener('click', () => chatbotModal.classList.add('hidden'));
 
-        } // Penutup mainAppLogic
+            function appendChatMessage(message, sender = 'bot') { /* ... (tidak berubah) ... */ 
+                const bubble = document.createElement('div');
+                bubble.classList.add('chat-bubble', sender === 'user' ? 'chat-bubble-user' : 'chat-bubble-bot');
+                bubble.textContent = message;
+                chatMessages.appendChild(bubble);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
 
-        // --- Panggil fungsi utama SETELAH DOM siap ---
-        if (document.readyState === 'loading') { 
-            console.log("[DEBUG][LOADER] DOM loading, adding listener.");
-            document.addEventListener('DOMContentLoaded', mainAppLogic);
-        } else { 
-            /* ... (Logika fallback loader) ... */ 
-        }
+            // Fungsi untuk memanggil Gemini API
+            async function callGeminiApi(text) {
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
+                // ===========================================
+                // --- PERBAIKAN BUG CHATBOT ADA DI SINI ---
+                // ===========================================
+                const systemPrompt = `Anda adalah 'Prioritask', asisten AI untuk mahasiswa. Tugas Anda adalah mengekstrak detail tugas kuliah dari teks pengguna dan mengubahnya menjadi objek JSON.
+                
+                Gunakan skema JSON ini:
+                { "type": "OBJECT", "properties": { "name": { "type": "STRING" }, "urgency": { "type": "NUMBER" }, "pentingnya": { "type": "NUMBER" }, "time": { "type": "NUMBER" } } }
+                
+                Aturan Konversi:
+                - "name": Nama tugas kuliah (misal: "Laporan Praktikum Jarkom", "Kuis Kalkulus").
+                - "urgency" (skala 1-5): 1=Santai/Minggu depan, 2=Minggu ini, 3=Lusa, 4=Besok, 5=Hari ini/Sangat Mendesak.
+                - "pentingnya" (skala 1-5): 1=Catatan, 2=Tugas Harian, 3=Tugas Besar/Projek, 4=Kuis/Presentasi, 5=Ujian/Final/Sangat Penting.
+                - "time": Estimasi waktu dalam jam (misal: "2 jam" -> 2, "30 menit" -> 0.5).
+                
+                Jika ada info yang kurang, gunakan nilai default: urgency=3, pentingnya=3, time=1.
+                HANYA RESPON DENGAN OBJEK JSON YANG VALID. JANGAN TAMBAHKAN TEKS LAIN.`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: text }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                "name": { "type": "STRING" },
+                                "urgency": { "type": "NUMBER" },
+                                "pentingnya": { "type": "NUMBER" }, // FIX: Diubah dari 'importance'
+                                "time": { "type": "NUMBER" }
+                            }
+                        }
+                    }
+                };
+                // ===========================================
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) throw new Error(`API error! status: ${response.status}`);
+                    const result = await response.json();
+                    const jsonText = result.candidates[0].content.parts[0].text;
+                    return JSON.parse(jsonText);
+                } catch (error) {
+                    console.error("Error memanggil Gemini API:", error);
+                    return null;
+                }
+            }
+
+            // Fungsi saat user mengirim chat
+            chatForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const userInput = chatInput.value.trim();
+                if (userInput === '') return;
+
+                appendChatMessage(userInput, 'user');
+                chatInput.value = ''; 
+                chatInputArea.classList.add('hidden'); 
+                appendChatMessage("...", 'bot'); 
+
+                const taskData = await callGeminiApi(userInput);
+                
+                chatMessages.removeChild(chatMessages.lastChild); // Hapus "..."
+
+                if (taskData) {
+                    pendingTaskData = taskData; // Data ini sekarang berisi 'pentingnya'
+                    
+                    // ===========================================
+                    // --- PERBAIKAN BUG TAMPILAN ADA DI SINI ---
+                    // ===========================================
+                    const summary = `Baik, saya catat ya:\n
+- Tugas: ${taskData.name}
+- Urgensi: ${taskData.urgency} (${urgencyLabels[taskData.urgency] || 'N/A'})
+- Pentingnya: ${taskData.pentingnya} (${importanceLabels[taskData.pentingnya] || 'N/A'}) 
+- Waktu: ${taskData.time} jam
+                    
+Apakah sudah benar?`;
+                    // ===========================================
+                    
+                    appendChatMessage(summary, 'bot');
+                    chatConfirmationText.textContent = `Simpan tugas: "${taskData.name}"?`;
+                    chatConfirmation.classList.remove('hidden');
+                } else {
+                    appendChatMessage("Maaf, saya tidak mengerti. Bisa coba ulangi dengan lebih spesifik?", 'bot');
+                    chatInputArea.classList.remove('hidden');
+                }
+            });
+
+            function resetChat() { /* ... (tidak berubah) ... */ 
+                chatMessages.innerHTML = `
+                    <div class="chat-bubble chat-bubble-bot">
+                        Halo! Saya asisten Prioritask. Coba ketik tugas Anda dalam satu kalimat.
+                        <br><br>
+                        Contoh: "Saya ada kuis kalkulus besok, penting sekali, butuh 2 jam belajar."
+                    </div>`;
+                chatInputArea.classList.remove('hidden');
+                chatConfirmation.classList.add('hidden');
+                pendingTaskData = null;
+            }
+
+            // Tombol Konfirmasi: YA
+            chatConfirmYes.addEventListener('click', async () => {
+                if (pendingTaskData) {
+                    appendChatMessage("Menyimpan tugas...", 'bot');
+                    // pendingTaskData sudah memiliki 'pentingnya', jadi bisa langsung dikirim
+                    const success = await addNewTask(pendingTaskData); 
+                    
+                    if (success) {
+                        appendChatMessage("Sip, tugas sudah disimpan!", 'bot');
+                    } else {
+                        appendChatMessage("Maaf, terjadi kesalahan saat menyimpan. Coba lagi.", 'bot');
+                    }
+                    
+                    setTimeout(() => {
+                        resetChat();
+                        chatbotModal.classList.add('hidden');
+Twoj-Stomatolog-Klinika-Stomatologiczna.png
+                    }, 2000);
+                }
+            });
+
+            // Tombol Konfirmasi: TIDAK
+            chatConfirmNo.addEventListener('click', () => { /* ... (tidak berubah) ... */ 
+                appendChatMessage("Baik, dibatalkan. Silakan ketik ulang tugas Anda.", 'bot');
+                resetChat();
+            });
+
+        }); // Penutup 'DOMContentLoaded'
     </script>
 </body>
 </html>
